@@ -1,0 +1,21 @@
+Source: libglib-ex-connectproperties-perl
+Section: perl
+Priority: optional
+Build-Depends: cdbs, debhelper (>= 4)
+Maintainer: Kevin Ryde <user42@zip.com.au>
+Standards-Version: 3.7.3
+Homepage: http://www.geocities.com/user42_kevin/glib-ex-connectproperties/index.html
+Bugs: mailto:user42@zip.com.au
+
+Package: libglib-ex-connectproperties-perl
+Architecture: all
+Depends: libglib-perl
+Description: link properties between objects in Glib-Perl
+ Glib::Ex::ConnectProperties establishes a link between properties on
+ different objects, so a change to any one of them is propagated to
+ others.
+ .
+ This is helpful for say tying the "active" of a Gtk2::CheckButton
+ control to the "active" of some target widget.  The button controls
+ the widget, but the button also gets updated if the target changes by
+ some other means.
