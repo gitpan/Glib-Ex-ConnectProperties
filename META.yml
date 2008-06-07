@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Glib-Ex-ConnectProperties
-version:             1
+version:             2
 abstract:            Link properties between objects.
 license:             gpl
 author:              

@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 # Copyright 2008 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
@@ -24,7 +26,8 @@ use Glib::Ex::ConnectProperties;
 use POSIX;
 
 SKIP: {
-  if (DBL_MANT_DIG - FLT_MANT_DIG < 10) {
+  # extra parens to stop perl prior to 5.10 taking "<" as the start of a "<>"
+  if ((DBL_MANT_DIG - FLT_MANT_DIG) < 10) {
     skip 'due to "double" and "float" the same size', 6;
   }
 

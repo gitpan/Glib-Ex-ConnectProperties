@@ -23,7 +23,7 @@ use Glib;
 use List::Util;
 use Scalar::Util;
 
-our $VERSION = 1;
+our $VERSION = 2;
 
 # set this to 1 for some diagnostic prints
 use constant DEBUG => 0;
@@ -70,11 +70,11 @@ sub new {
 }
 
 #
-# No DESTROY method here.  No need to disconnect our notify signals in
-# DESTROY because each signal callback has a strong reference to us, meaning
-# the only time we're destroyed is when all the linked objects are
-# destroyed, and in that case all their signals have been disconnected
-# already.
+# No DESTROY method here.  No need to disconnect notify signals in DESTROY
+# because each signal callback has a strong reference to the
+# ConnectProperties object, meaning the only time a ConnectProperties is
+# destroyed is when all the linked objects are destroyed, and in that case
+# all the signals have been disconnected already.
 #
 
 sub disconnect {
@@ -89,7 +89,7 @@ sub disconnect {
     my $id = $elem->{'notify_id'};
     if (! $id) { next; } # no connection on write-only properties
 
-    # might be already disconnected in course of object destruction
+    # might be already disconnected during global destruction
     if ($object->signal_handler_is_connected ($id)) { next; }
 
     $object->signal_handler_disconnect ($id);
@@ -147,10 +147,10 @@ sub _do_notify {
 # equality of two values from $pspec (Glib::ParamSpec) properties.
 #
 # The quantity of code below is pretty unattractive.  Isn't there something
-# builtin for testing equality between "GValue"s, or "GParamSpec" flavour
+# builtin for testing equality between "GValue"s or "GParamSpec" flavoured
 # values?  The code is also fairly excessive for the present straight
-# copying between properties, but if there's some transformations applied in
-# the future it'll matter more.
+# copying between properties, but if there's transformations applied in the
+# future it'll matter more.
 #
 sub _pspec_equality_func {
   my ($pspec) = @_;
@@ -223,7 +223,8 @@ sub Glib::Param::Float::Glib_Ex_ConnectProperties_equal {
 # Glib::Enum values as nick strings.
 #
 # "Glib::Enum" isn't an actual perl class in Gtk2-Perl 1.181 (though is
-# going to become one), so must set this up through Glib::Param::Enum.
+# going to become one in the future), so must set this up through
+# Glib::Param::Enum.
 #
 sub Glib::Param::Enum::Glib_Ex_ConnectProperties_equal {
   my ($a, $b) = @_;
@@ -237,7 +238,8 @@ sub Glib::String::Glib_Ex_ConnectProperties_equal {
   return $a eq $b;
 }
 
-# Same 'eq' compare on scalars, though that may or may not do what you want.
+# Same 'eq' compare on scalars as done for strings, though that may or may
+# not do what you actually want.
 #
 *Glib::Scalar::Glib_Ex_ConnectProperties_equal
   = \&Glib::String::Glib_Ex_ConnectProperties_equal;
@@ -322,17 +324,17 @@ no matter how the target changes.
 
 String, number, enum, flags, and object type properties are supported.  Some
 boxed types like C<Gtk2::Gdk::Color> work too, but others have potential
-problems (see L</IMPLEMENATION NOTES> below).
+problems (see L</IMPLEMENTATION NOTES> below).
 
 Read-only properties can be given.  They're read and propagated, but changes
-in other linked properties skip read-only destinations, which will leave
-different values, rather defeating the purpose of the linkage.  Including a
+in other linked properties skip read-only destinations; which leaves
+different values, rather defeating the purpose of the linkage.  Linking a
 read-only probably only makes sense if the read-only one is the only one
 changing.
 
-Write-only properties can be given, nothing is read out of them, they're
+Write-only properties can be given.  Nothing is read out of them, they're
 just set from the other linked properties.  Write-only properties are often
-pseudo "add" methods etc, so it's probably unlikely linking a write-only
+pseudo "add" methods etc, so it's probably unlikely linking in a write-only
 will do much good.
 
 It works to connect two properties on the same object; doing so can ensure
@@ -376,10 +378,9 @@ Disconnect the given ConnectProperties linkage.
 =head1 IMPLEMENTATION NOTES
 
 ConnectProperties uses a C<notify> signal handler on each object to update
-the others.  Calling C<set> to update makes those others emit further
-C<notify> signals (even if the value is unchanged), so some care must be
-taken not to cause an infinite loop.  The present strategy for that is
-twofold
+the others.  Updating those others makes them in turn emit further C<notify>
+signals (even if the value is unchanged), so some care must be taken not to
+cause an infinite loop.  The present strategy for that is twofold
 
 =over 4
 
@@ -398,8 +399,7 @@ what's wanted then the C<set> call is not made at all.
 
 The in-progress flag is effective against immediate further C<notify>s.
 They could also be avoided by disconnecting or blocking the handlers
-temporarily, but that'd probably take more work and bookkeeping than
-ignoring.
+temporarily, but that'd probably take more bookkeeping work than ignoring.
 
 The compare-before-set is essential to cope with C<freeze_notify>, because
 in that case the C<notify> calls don't come while the "in progress" flag is
@@ -421,7 +421,7 @@ alone the same Perl ref.)
 
 =head2 Notifies
 
-By the way, if you're writing a widget don't forget you have to explicitly
+Incidentally, if you're writing a widget don't forget you have to explicitly
 C<notify> if changing a property anywhere outside your C<SET_PROPERTY>
 method.  (Extra notifies from within that method are ok and are collapsed to
 just one emission at the end.)  This of course is a requirement of any

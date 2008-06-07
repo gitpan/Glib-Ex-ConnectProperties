@@ -42,12 +42,15 @@ WriteMakefile
   );
 
 
+
+
 sub MY::postamble {
   return <<'MAKE_FRAG';
 
 lint:
-	perl -MO=Lint lib/Glib/Ex/ConnectProperties.pm
+	perl -MO=Lint lib/Glib/Ex/ConnectProperties.pm t/*.t
 	podchecker lib/Glib/Ex/ConnectProperties.pm
+	perlcritic --nocolor -1 lib/Glib/Ex/ConnectProperties.pm t/*.t
 
 myman:
 	mv MANIFEST MANIFEST.old
@@ -84,6 +87,17 @@ copyright-years-check: Glib-Ex-ConnectProperties-$(VERSION).tar.gz
 	    fi; \
 	  done; \
 	  exit $$result)
+
+diff-prev:
+	make $(DISTNAME)-$(VERSION).tar.gz
+	rm -rf diff.tmp
+	mkdir diff.tmp
+	cd diff.tmp \
+	  && tar xfz ../$(DISTNAME)-`expr $(VERSION) - 1`.tar.gz \
+	  && tar xfz ../$(DISTNAME)-$(VERSION).tar.gz
+	-cd diff.tmp; diff -ur $(DISTNAME)-`expr $(VERSION) - 1` \
+	                       $(DISTNAME)-$(VERSION) >tree.diff
+	-less diff.tmp/tree.diff
 
 MAKE_FRAG
 }

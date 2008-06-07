@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 # Copyright 2008 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
