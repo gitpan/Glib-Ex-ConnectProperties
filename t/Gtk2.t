@@ -19,9 +19,9 @@
 
 use strict;
 use warnings;
+use Glib::Ex::ConnectProperties;
 use Test::More tests => 35;
 
-use Glib::Ex::ConnectProperties;
 
 SKIP: {
   if (! eval { require Gtk2 } || ! Gtk2->init_check) {

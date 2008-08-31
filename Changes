@@ -16,5 +16,14 @@ You should have received a copy of the GNU General Public License along
 with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-Version 1 - the first version
-Version 2 - fix for t/POSIX.t in perl 5.8
+
+Version 3, August 2008
+    - use get_property() to cope with objects which override plain
+      get(), eg. Gtk2::ListStore
+    - fix disconnect() removing the signal handlers
+
+Version 2, June 2008
+    - fix for t/POSIX.t in perl 5.8
+
+Version 1, May 2008
+    - the first version

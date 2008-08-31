@@ -20,10 +20,10 @@
 
 use strict;
 use warnings;
-use Test::More tests => 6;
-
 use Glib::Ex::ConnectProperties;
 use POSIX;
+use Test::More tests => 6;
+
 
 SKIP: {
   # extra parens to stop perl prior to 5.10 taking "<" as the start of a "<>"

@@ -23,7 +23,7 @@ use Glib;
 use List::Util;
 use Scalar::Util;
 
-our $VERSION = 2;
+our $VERSION = 3;
 
 # set this to 1 for some diagnostic prints
 use constant DEBUG => 0;
@@ -83,16 +83,18 @@ sub disconnect {
   if (DEBUG) { print "$self disconnect ",scalar(@$array)," elems\n"; }
 
   while (my $elem = pop @$array) {
-    my $object = $elem->{'object'} or next; # if not gone due to weakening
+    my $object = $elem->{'object'} || next; # if not gone due to weakening
     if (DEBUG) { print "  $object id ",$elem->{'notify_id'}||'undef',"\n"; }
 
     my $id = $elem->{'notify_id'};
     if (! $id) { next; } # no connection on write-only properties
 
-    # might be already disconnected during global destruction
-    if ($object->signal_handler_is_connected ($id)) { next; }
-
-    $object->signal_handler_disconnect ($id);
+    # guard against already disconnected during perl "global destruction",
+    # signal_handler_disconnect() will print an unsightly g_warn() if $id is
+    # already gone
+    if ($object->signal_handler_is_connected ($id)) {
+      $object->signal_handler_disconnect ($id);
+    }
   }
 }
 
@@ -100,16 +102,18 @@ sub disconnect {
 sub _do_notify {
   my ($from_object, $from_pspec, $userdata) = @_;
   my ($self, $from_elem) = @$userdata;
-  if (DEBUG) { print "$self notify from $from_object/",$from_pspec->get_name,
-                 " value ", $from_object->get ($from_pspec->get_name),
-                 $self->{'notify_in_progress'} ? ' [already in progress]' : '',
-                   "\n";}
+  if (DEBUG) { print "$self notify from $from_object/";
+               my $from_property = $from_pspec->get_name;
+               print "$from_property value ";
+               print $from_object->get_property ($from_property);
+               print $self->{'notify_in_progress'}?' [already in progress]':'';
+               print "\n";}
 
   if ($self->{'notify_in_progress'}) { return; }
   local $self->{'notify_in_progress'} = 1;
 
   my $from_property = $from_pspec->get_name;
-  my $from_val = $from_object->get ($from_property);
+  my $from_val = $from_object->get_property ($from_property);
   if (DEBUG) { print "  propagate value ",
                  defined $from_val ? $from_val : 'undef', "\n"; }
 
@@ -126,18 +130,18 @@ sub _do_notify {
       $i--;
       next;
     }
-    
+
     my $to_val = $from_val;
     my $to_property = $to_elem->{'property'};
-    
+
     if ($to_elem->{'flags'} & 'readable') {
-      my $old_to_value = $to_object->get ($to_property);
+      my $old_to_value = $to_object->get_property ($to_property);
       if ($to_elem->{'equal'}->($old_to_value, $to_val)) {
         if (DEBUG) { print "  suppress equal to $to_object/$to_property\n"; }
         next;
       }
     }
-    
+
     if (DEBUG) { print "  store to $to_object/$to_property\n"; }
     $to_object->set ($to_property, $to_val);
   }
@@ -322,29 +326,29 @@ no matter how the target changes.
 
 =head2 Property types
 
-String, number, enum, flags, and object type properties are supported.  Some
+String, number, enum, flags, and object properties are supported.  Some
 boxed types like C<Gtk2::Gdk::Color> work too, but others have potential
 problems (see L</IMPLEMENTATION NOTES> below).
 
-Read-only properties can be given.  They're read and propagated, but changes
-in other linked properties skip read-only destinations; which leaves
+Read-only properties can be used.  They're read and propagated, but changes
+in other linked properties are not stored to read-onlys; though this leaves
 different values, rather defeating the purpose of the linkage.  Linking a
 read-only probably only makes sense if the read-only one is the only one
 changing.
 
-Write-only properties can be given.  Nothing is read out of them, they're
-just set from the other linked properties.  Write-only properties are often
-pseudo "add" methods etc, so it's probably unlikely linking in a write-only
-will do much good.
+Write-only properties can be used.  Nothing is read out of them, they're
+just set from changes in the other linked properties.  (Write-only
+properties are often pseudo "add" methods etc, so it's probably unlikely
+linking in a write-only will do much good.)
 
 It works to connect two properties on the same object; doing so can ensure
-they update together.  It also works to have two ConnectProperties groups
+they update together.  It also works to have two different ConnectProperties
 with an object/property in common; a change coming from one group propagates
 through to the other just fine.  In fact such a setup arises quite naturally
 if you've got two controls for the same target; neither of them needs to
 know the other exists.
 
-Currently there's no transformations applied to values transferred between
+Currently there's no transformations applied to values copied between
 property settings.  The intention is to have some "map" options or
 transformation functions on a per object+property basis.
 
@@ -352,7 +356,7 @@ transformation functions on a per object+property basis.
 
 =over 4
 
-=item C<< Glib::Ex::ConnectProperties->new ([$obj1,$prop1],[$obj,$prop2],...) >>
+=item C<< $conn = Glib::Ex::ConnectProperties->new ([$obj1,$prop1],[$obj,$prop2],...) >>
 
 Connect two or more given object+property combinations.  Each argument is an
 array ref to an object and a property name.  For example
@@ -362,7 +366,7 @@ array ref to an object and a property name.  For example
                  [$second_object, 'second-property-name']);
 
 The return value is a Perl object of type C<Glib::Ex::ConnectProperties>.
-You can keep that to later explicitly break the connection with
+You can keep that to later break the connection explicitly with
 C<disconnect> below, or otherwise you can ignore it.
 
 A ConnectProperties linkage lasts as long as the linked objects exist, but
@@ -398,35 +402,37 @@ what's wanted then the C<set> call is not made at all.
 =back
 
 The in-progress flag is effective against immediate further C<notify>s.
-They could also be avoided by disconnecting or blocking the handlers
-temporarily, but that'd probably take more bookkeeping work than ignoring.
+They could also be avoided by disconnecting or blocking the respective
+handlers temporarily, but that'd probably take more bookkeeping work than
+just ignoring.
 
 The compare-before-set is essential to cope with C<freeze_notify>, because
 in that case the C<notify> calls don't come while the "in progress" flag is
 on, only later, perhaps a long time later.
 
 It might be wondered if something simpler is possible, and the short answer
-is that for the general case, no.  The specific C<set_foo> methods on most
-widgets and objects will skip an unchanged setting, but alas when using
-C<set> the protection above is needed.
+is that for the general case, not really.  The specific C<set_foo> methods
+on most widgets and objects will skip an unchanged setting, but alas when
+using the generic C<set_property> the protection above is needed.
 
 =head2 Equality
 
-Glib doesn't offer much help for an "equal" test of arbitrary property
-values for the compare-before-set.  ConnectProperties recognises the types
-noted above, and can use an C<equal> or C<compare> method at the Perl level
-like boxed types C<Gtk2::Gdk::Region> and C<Gtk2::TreePath> have.  (Boxed
-types get copied so unfortunately you don't see the same pointer twice, let
-alone the same Perl ref.)
+Glib-Perl doesn't yet wrap C<values_cmp> to do an "equal" test of arbitrary
+property values for the compare-before-set.  ConnectProperties recognises
+the types noted above, and can use an object C<equal> or C<compare> method
+at the Perl level like boxed types C<Gtk2::Gdk::Region> and
+C<Gtk2::TreePath> have.  (Boxed types get copied so unfortunately you don't
+see the same pointer twice, let alone the same Perl ref, making a direct
+C<< == >> no good.)
 
 =head2 Notifies
 
 Incidentally, if you're writing a widget don't forget you have to explicitly
-C<notify> if changing a property anywhere outside your C<SET_PROPERTY>
-method.  (Extra notifies from within that method are ok and are collapsed to
-just one emission at the end.)  This of course is a requirement of any
-widget, but failing to do so in particular means ConnectProperties won't
-work.
+C<notify> if changing a property from anywhere outside your C<SET_PROPERTY>
+method.  (Duplicate notifies from within that method are ok and are
+collapsed to just one emission at the end.)  Of course this is required for
+any widget, but failing to do will mean in particular that ConnectProperties
+won't work.
 
 =head1 SEE ALSO
 
@@ -434,7 +440,7 @@ L<Glib::Object>
 
 =head1 HOME PAGE
 
-L<http://www.geocities.com/user42_kevin/glib-ex-connectproperties/index.html>
+L<http://www.geocities.com/user42_kevin/glib-ex-connectproperties/>
 
 =head1 LICENSE
 

@@ -65,7 +65,7 @@ ConnectProperties.html: lib/Glib/Ex/ConnectProperties.pm Makefile
 
 # find files in the dist with mod times this year, but without this year in
 # the copyright line
-copyright-years-check: Glib-Ex-ConnectProperties-$(VERSION).tar.gz
+copyright-years-check:
 	year=`date +%Y`; \
 	tar tvfz Glib-Ex-ConnectProperties-$(VERSION).tar.gz \
 	| grep $$year- \
@@ -88,16 +88,19 @@ copyright-years-check: Glib-Ex-ConnectProperties-$(VERSION).tar.gz
 	  done; \
 	  exit $$result)
 
+debug-constants-check:
+	if egrep -n 'DEBUG => [^0]' $(TO_INST_PM); then exit 1; else exit 0; fi
+
 diff-prev:
-	make $(DISTNAME)-$(VERSION).tar.gz
 	rm -rf diff.tmp
 	mkdir diff.tmp
 	cd diff.tmp \
-	  && tar xfz ../$(DISTNAME)-`expr $(VERSION) - 1`.tar.gz \
-	  && tar xfz ../$(DISTNAME)-$(VERSION).tar.gz
+	&& tar xfz ../$(DISTNAME)-`expr $(VERSION) - 1`.tar.gz \
+	&& tar xfz ../$(DISTNAME)-$(VERSION).tar.gz
 	-cd diff.tmp; diff -ur $(DISTNAME)-`expr $(VERSION) - 1` \
 	                       $(DISTNAME)-$(VERSION) >tree.diff
 	-less diff.tmp/tree.diff
+	rm -rf diff.tmp
 
 MAKE_FRAG
 }

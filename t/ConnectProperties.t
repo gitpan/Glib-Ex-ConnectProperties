@@ -19,7 +19,8 @@
 
 use strict;
 use warnings;
-use Test::More tests => 64;
+use Glib::Ex::ConnectProperties;
+use Test::More tests => 66;
 
 package Foo;
 use strict;
@@ -43,12 +44,22 @@ use Glib::Object::Subclass
                 ];
 
 package main;
-use Glib::Ex::ConnectProperties;
+
+# return true if there's any signal handlers connected to $obj
+sub any_signal_connections {
+  my ($obj) = @_;
+  my @connected = grep {$obj->signal_handler_is_connected ($_)} (0 .. 500);
+  if (@connected) {
+    diag "$obj signal handlers connected: ",join(' ',@connected),"\n";
+    return 1;
+  }
+  return 0;
+}
 
 
 #-----------------------------------------------------------------------------
-ok ($Glib::Ex::ConnectProperties::VERSION >= 1);
-ok (Glib::Ex::ConnectProperties->VERSION >= 1);
+ok ($Glib::Ex::ConnectProperties::VERSION >= 3);
+ok (Glib::Ex::ConnectProperties->VERSION  >= 3);
 
 
 #-----------------------------------------------------------------------------
@@ -157,6 +168,9 @@ ok (Glib::Ex::ConnectProperties->VERSION >= 1);
   is ($obj2->get ('myprop-two'), 0);
 
   $conn->disconnect;
+  ok (! any_signal_connections($obj1));
+  ok (! any_signal_connections($obj2));
+
   $obj1->set (myprop_one=>1);
   is ($obj1->get ('myprop-one'), 1);
   is ($obj1->get ('myprop-two'), 1);
