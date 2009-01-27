@@ -10,6 +10,7 @@ devel/infinite-notify.pl
 devel/misc.pl
 devel/proptypes.pl
 devel/run.pl
+devel/unichar.pl
 examples/sensitive.pl
 lib/Glib/Ex/ConnectProperties.pm
 Makefile.PL
@@ -17,7 +18,9 @@ MANIFEST			This list of files
 README
 SIGNATURE
 t/ConnectProperties.t
+t/Gtk2-display.t
 t/Gtk2.t
 t/pod.t
 t/POSIX.t
+t/test-weaken.t
 META.yml                                 Module meta-data (added by MakeMaker)

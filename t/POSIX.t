@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008 Kevin Ryde
+# Copyright 2008, 2009 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -21,37 +21,66 @@
 use strict;
 use warnings;
 use Glib::Ex::ConnectProperties;
-use POSIX;
-use Test::More tests => 6;
+use POSIX ();
+use Test::More;
+
+if (POSIX::DBL_MANT_DIG() - POSIX::FLT_MANT_DIG() < 10) {
+  plan skip_all => 'due to "float" and "double" the same size';
+}
+plan tests => 4;
 
 
-SKIP: {
-  # extra parens to stop perl prior to 5.10 taking "<" as the start of a "<>"
-  if ((DBL_MANT_DIG - FLT_MANT_DIG) < 10) {
-    skip 'due to "double" and "float" the same size', 6;
-  }
+require Glib;
+diag ("Perl-Glib version ",Glib->VERSION);
+diag ("Compiled against Glib version ",
+      Glib::MAJOR_VERSION(), ".",
+      Glib::MINOR_VERSION(), ".",
+      Glib::MICRO_VERSION(), ".");
+diag ("Running on       Glib version ",
+      Glib::major_version(), ".",
+      Glib::minor_version(), ".",
+      Glib::micro_version(), ".");
 
-  my $shift = FLT_MANT_DIG + 5;
+## no critic (ProtectPrivateSubs)
 
-  {
-    my $pspec = Glib::ParamSpec->float ('foo','foo','blurb',
-                                        0,100,0,['readable']);
-    my $subr = Glib::Ex::ConnectProperties::_pspec_equality_func ($pspec);
-    is (ref($subr), 'CODE');
 
-    ok ($subr->(2 ** $shift, 2 ** $shift));
-    ok ($subr->(2 ** $shift, 2 ** $shift + 1));
-  }
+my $N = POSIX::FLT_MANT_DIG() + 5;
+diag "FLT_MANT_DIG=",POSIX::FLT_MANT_DIG(),
+  ", DBL_MANT_DIG=",POSIX::DBL_MANT_DIG(),
+  ", test with N=$N";
 
-  {
-    my $pspec = Glib::ParamSpec->double ('foo','foo','blurb',
-                                         0,100,0,['readable']);
-    my $subr = Glib::Ex::ConnectProperties::_pspec_equality_func ($pspec);
-    is (ref($subr), 'CODE');
+{
+  my $pspec = Glib::ParamSpec->float ('foo','foo','blurb',
+                                      0,100,0,['readable']);
+  diag "pspec ",ref $pspec,", value_type=",$pspec->get_value_type;
 
-    ok ($subr->(2 ** $shift, 2 ** $shift));
-    ok (! $subr->(2 ** $shift, 2 ** $shift + 1));
-  }
+  ok (Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       2 ** $N,
+       2 ** $N),
+      "2**N same values equal");
+  ok (Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       2 ** $N,
+       2 ** $N + 1),
+      "2**N + 1 rounds to 2**N in a float");
+}
+
+{
+  my $pspec = Glib::ParamSpec->double ('foo','foo','blurb',
+                                       0,100,0,['readable']);
+  diag "pspec ",ref $pspec,", value_type=",$pspec->get_value_type;
+
+  ok (Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       2 ** $N,
+       2 ** $N),
+      "2**N same values equal");
+  ok (! Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       2 ** $N,
+       2 ** $N + 1),
+      "2**N + 1 doesn't round to 2**N in a double");
 }
 
 exit 0;

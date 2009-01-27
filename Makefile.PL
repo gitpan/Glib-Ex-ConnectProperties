@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 
-# Copyright 2007, 2008 Kevin Ryde
+# Copyright 2007, 2008, 2009 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
 # Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
-# by the Free Software Foundation; either version 2, or (at your option) any
+# by the Free Software Foundation; either version 3, or (at your option) any
 # later version.
 #
 # Glib-Ex-ConnectProperties is distributed in the hope that it will be useful,
@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
+use 5.008;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -32,13 +33,25 @@ WriteMakefile
    PREREQ_PM    => {
                     # any version should be ok
                     'Glib' => 0,
-
-                    # actually Glib requires perl 5.8, which has
-                    # Scalar::Util builtin already
-                    'Scalar::Util' => 0,
                    },
 
    clean        => { FILES => "ConnectProperties.html" },
+
+   EXTRA_META => <<'HERE',
+optional_features:
+    maximum_tests:
+        description: Have "make test" do as much as possible.
+        requires:
+            Test::Pod: 1.00
+            Test::Weaken: 0
+            Gtk2: 0
+no_index:
+    directory:
+        - devel
+resources:
+    homepage: http://www.geocities.com/user42_kevin/glib-ex-connectproperties/index.html
+    license: http://www.gnu.org/licenses/#GPL
+HERE
   );
 
 
@@ -47,10 +60,14 @@ WriteMakefile
 sub MY::postamble {
   return <<'MAKE_FRAG';
 
+LINT_FILES = $(TO_INST_PM) t/*.t examples/*.pl devel/*.pl
 lint:
-	perl -MO=Lint lib/Glib/Ex/ConnectProperties.pm t/*.t
-	podchecker lib/Glib/Ex/ConnectProperties.pm
-	perlcritic --nocolor -1 lib/Glib/Ex/ConnectProperties.pm t/*.t
+	perl -MO=Lint $(LINT_FILES)
+pc:
+	-podchecker $(LINT_FILES)
+	perlcritic $(LINT_FILES)
+unused:
+	for i in $(LINT_FILES); do perl -Mwarnings::unused -I lib $$i; done
 
 myman:
 	mv MANIFEST MANIFEST.old
@@ -74,8 +91,9 @@ copyright-years-check:
 	  while read i; do \
 	    case $$i in \
 	      '' | */ | *.gmo \
-	      | debian/changelog | debian/compat | debian/control \
-	      | SIGNATURE | META.yml) \
+	      | debian/changelog | debian/compat \
+	      | t/pod.t \
+	      | COPYING | MANIFEST | SIGNATURE | META.yml) \
 	      continue ;; \
 	    esac; \
 	    if test -e "$(srcdir)/$$i"; then f="$(srcdir)/$$i"; \

@@ -1,10 +1,12 @@
-# Copyright 2007, 2008 Kevin Ryde
+#!/usr/bin/perl
+
+# Copyright 2007, 2008, 2009 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
 # Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
-# by the Free Software Foundation; either version 2, or (at your option) any
+# by the Free Software Foundation; either version 3, or (at your option) any
 # later version.
 #
 # Glib-Ex-ConnectProperties is distributed in the hope that it will be useful,
@@ -46,7 +48,7 @@ use Scalar::Util;
 {
   my $y = 123;
   my $x = \$y;
-  print UNIVERSAL::isa($x,'foo') ? "yes\n" : "no\n";
+  print $x->isa('foo') ? "yes\n" : "no\n";
   print $x->isa('foo') ? "yes\n" : "no\n";
   exit 0;
 }

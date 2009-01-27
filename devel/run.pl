@@ -1,10 +1,12 @@
-# Copyright 2007, 2008 Kevin Ryde
+#!/usr/bin/perl
+
+# Copyright 2007, 2008, 2009 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
 # Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
-# by the Free Software Foundation; either version 2, or (at your option) any
+# by the Free Software Foundation; either version 3, or (at your option) any
 # later version.
 #
 # Glib-Ex-ConnectProperties is distributed in the hope that it will be useful,
@@ -18,9 +20,11 @@
 
 use strict;
 use warnings;
-use Gtk2 '-init';
 use Glib::Ex::ConnectProperties;
-use Scalar::Util;
+use Gtk2 '-init';
+
+use FindBin;
+my $progname = $FindBin::Script;
 
 my $toplevel = Gtk2::Window->new('toplevel');
 $toplevel->signal_connect (destroy => sub { Gtk2->main_quit });
@@ -35,10 +39,17 @@ $vbox->add ($label2);
 
 my $press_button = Gtk2::CheckButton->new_with_label ('Press');
 $vbox->add ($press_button);
+$press_button->signal_connect
+  ('notify::active' => sub {
+     print "$progname: press_button active now ",
+       $press_button->get('active'),"\n"; });
 
 my $conn = Glib::Ex::ConnectProperties->new ([$label,'sensitive'],
                                              [$press_button,'active'],
                                              [$label2,'label']);
+require Data::Dumper;
+print Data::Dumper->new([$conn],['conn'])->Sortkeys(1)->Dump;
+require Scalar::Util;
 Scalar::Util::weaken ($conn);
 
 {
@@ -77,8 +88,8 @@ if (1) {
 
 
 {
-  my $label = Gtk2::Label->new;
-  $vbox->add ($label);
+  my $label3 = Gtk2::Label->new;
+  $vbox->add ($label3);
   sub my_Xtransform {
     my ($value, $object, $propertyname) = @_;
     return "the name is $value";
@@ -86,7 +97,7 @@ if (1) {
 
   Glib::Ex::ConnectProperties->new
     ([$toplevel, 'name', map_out => \&my_Xtransform ],
-     [$label, 'label']);
+     [$label3, 'label']);
 }
 {
   my $spin1 = Gtk2::SpinButton->new_with_range (0, 100, 1);
@@ -108,11 +119,11 @@ if (1) {
       # map_out => \&my_untransform
      ]);
 
-  my $label = Gtk2::Label->new;
-  $vbox->add ($label);
+  my $label4 = Gtk2::Label->new;
+  $vbox->add ($label4);
   Glib::Ex::ConnectProperties->new
     ([$spin1, 'value'],
-     [$label,'label',
+     [$label4,'label',
       # map_in => sub { "the value is $_[0]"}
      ]);
 }
@@ -125,5 +136,5 @@ if (1) {
 $toplevel->show_all;
 Gtk2->main;
 
-print __FILE__.': $conn ',defined $conn ? "defined\n" : "not defined\n";
+print "$progname: conn ",(defined $conn ? "defined\n" : "not defined\n");
 exit 0;

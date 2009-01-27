@@ -15,31 +15,34 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 8624bcdae55baeef00cd11d5dfcfa60f68710a02 COPYING
-SHA1 dd6ff70fb4557484a5976ac82dae2dc9b34608e5 Changes
-SHA1 3e5dcb32b4ee24a2b46e1336800d14c7473d77fa MANIFEST
-SHA1 64de813ecfc51b57fca7dfce5c1f9cfad6184078 META.yml
-SHA1 70a2c97827c85dd4f2700696c3310a3e7f23a65a Makefile.PL
-SHA1 8075d439cbc57e171d33848631631e040b43d9d8 README
-SHA1 7f6598033464ed807c84b6622cfa875a1e187dda debian/changelog
+SHA1 8315479237c43c48790234435ae5c29284c4c883 Changes
+SHA1 e9cd4c8c6355dfe7902f3c5dd729f00397b9f8fd MANIFEST
+SHA1 cedd0f272eb2a087fb62e799f1d38ca4820c40e5 META.yml
+SHA1 c6e0d661b8daa42cfed55e27b258b518848f2e55 Makefile.PL
+SHA1 390b6617604b869a65997ed34ff12a8bf5558bf6 README
+SHA1 d3d682a68965e2455d7459e0afe5419a445ae23f debian/changelog
 SHA1 1b6453892473a467d07372d45eb05abc2031647a debian/compat
-SHA1 b1734d85632282c279763b5e69dbf472f4ba6834 debian/control
+SHA1 2e2a0755bb4e21b29f4f301620c400655cf3d7bd debian/control
 SHA1 99d1c82b21b4774fe4e3e7e3f6e725abbf57c0d5 debian/copyright
 SHA1 6604489c7bb727e788a4c5ca515dc385efaa0e89 debian/rules
-SHA1 48fc46a3c3846e414d3036288101707bbfb4d25e debian/watch
-SHA1 32747cadd861d8b4e5cc8c54e5a98ab10052f697 devel/infinite-notify.pl
-SHA1 aeb5e835b3c62d46168ca9da472ce58405294f2a devel/misc.pl
-SHA1 3201271928132ec289d1451ab619283b6e07d7e2 devel/proptypes.pl
-SHA1 4edc18a6ba59e59fc532bdf6541d40b769e5b738 devel/run.pl
-SHA1 dee8c6431690675ed568c650aa0eb03dd036e204 examples/sensitive.pl
-SHA1 54e96fb6a52685e8f20254c09b4d429df06b659d lib/Glib/Ex/ConnectProperties.pm
-SHA1 7e7851a16af4e78f445dec388737eb1f0b9ebca7 t/ConnectProperties.t
-SHA1 6b2094d8d2ffce7e214168794b6246cae5f49eab t/Gtk2.t
-SHA1 76795b03b4e9fa31e68d6da81ea61df48f98c95d t/POSIX.t
+SHA1 0fd98a34d763ee0b1c6013d0aa82c8e4e1f2be27 debian/watch
+SHA1 d3b9aa0603216978e031fc6844948172b77a9a6c devel/infinite-notify.pl
+SHA1 175d6b0dcd76b244f839a799cdaea3048b28c78c devel/misc.pl
+SHA1 e4d9b1c1893c3c8de847c9ddb824e34f0b340abf devel/proptypes.pl
+SHA1 f7adf8b5665ebfd0dc90c315ed3374492202f4dc devel/run.pl
+SHA1 24d019fa17c33d10a1972d4bb48061cf1c9aa327 devel/unichar.pl
+SHA1 230dc5d97e8b73047301e29c24be5b949a8947f9 examples/sensitive.pl
+SHA1 7451920e336aaffed6190744aebc0c423324beb9 lib/Glib/Ex/ConnectProperties.pm
+SHA1 eb57a3aa8734fe0977c62203a97f4d12b1e02b52 t/ConnectProperties.t
+SHA1 ce1acc76cd836b946cb8f93b73ac7d5e5cb666a0 t/Gtk2-display.t
+SHA1 ebb97d05ae0d2851435374ec78f45ea138ffc33d t/Gtk2.t
+SHA1 f866b52a656db3d0e9a6ec45bd9d0b8cc5c0ace7 t/POSIX.t
 SHA1 a661a39e55a4127aecb1b97a631c4f01f7dce8c6 t/pod.t
+SHA1 6d97b3ab9e0958c074b57ae83ff0739bdbf7340a t/test-weaken.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iD8DBQFIud6qLFMCIV9q3ToRAsVnAJ9ZdCpEvE/zeevZVX2JxHqMLqd7OQCeOsa+
-mhv6X/sDQkAfqC5m0QcSb9k=
-=3GtR
+iD8DBQFJf5H4LFMCIV9q3ToRAunPAJ9X7aTTCbmktp2gIsZZYb5Pfp4MTACdH87B
+Sz0mI2fQ3hypQsyw05Ac+nU=
+=XVxo
 -----END PGP SIGNATURE-----

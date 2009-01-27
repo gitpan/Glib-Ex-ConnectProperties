@@ -18,44 +18,46 @@
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# A set from a notify going back and forwards endlessly.
-
-
 package Foo;
 use strict;
 use warnings;
 use Glib;
 use Glib::Object::Subclass
   Glib::Object::,
-  properties => [Glib::ParamSpec->boolean
-                 ('myprop',
-                  'myprop',
+  properties => [Glib::ParamSpec->unichar
+                 ('mychar',
+                  'mychar',
                   'Blurb.',
-                  0,
+                  'x',
                   Glib::G_PARAM_READWRITE)
                 ];
 
-package main;
+sub GET_PROPERTY {
+  my ($self, $pspec) = @_;
+  return ($self->{'mychar'} || 65);
+}
+
+sub SET_PROPERTY {
+  my ($self, $pspec, $newval) = @_;
+  $self->{'mychar'} = $newval;
+}
+
 use strict;
 use warnings;
+use Glib::Ex::ConnectProperties;
+use Data::Dumper;
 
-my $f1 = Foo->new;
-my $f2 = Foo->new;
+my $foo = Foo->new;
+my $pspec = $foo->find_property ('mychar');
+{ my $default = $pspec->get_default_value;
+  print Dumper(\$default);
+}
+{ my $value = $foo->get('mychar');
+  print Dumper(\$value);
+}
+$foo->set('mychar',70);
+{ my $value = $foo->get('mychar');
+  print Dumper(\$value);
+}
 
-$f1->signal_connect (notify => sub {
-                       print "f1 notify, set f2\n";
-                       sleep 1;
-                       $f2->set('myprop',0);
-                     });
-$f2->signal_connect (notify => sub {
-                       print "f2 notify, set f1\n";
-                       sleep 1;
-                       $f1->set('myprop',0);
-                     });
-
-$f1->set('myprop',0);
-
-my $context = Glib::MainContext->default;
-my $mainloop = Glib::MainLoop->new ($context);
-$mainloop->run;
 exit 0;

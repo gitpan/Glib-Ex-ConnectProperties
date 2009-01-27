@@ -1,10 +1,12 @@
-# Copyright 2008 Kevin Ryde
+#!/usr/bin/perl
+
+# Copyright 2008, 2009 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
 # Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
-# by the Free Software Foundation; either version 2, or (at your option) any
+# by the Free Software Foundation; either version 3, or (at your option) any
 # later version.
 #
 # Glib-Ex-ConnectProperties is distributed in the hope that it will be useful,
@@ -16,7 +18,7 @@
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Finding out what different property types are used.
+# Finding out what different GParamSpec property types are used.
 
 
 use strict;
@@ -48,7 +50,7 @@ my $bitmap = Gtk2::Gdk::Bitmap->create_from_data (undef, "\0", 1, 1);
   my $a = $about->get ('artists');
   print "Strv ", Dumper ($a);
   $about->set_artists ('Picasso', 'Matisse');
-  my $a = $about->get ('artists');
+  $a = $about->get ('artists');
   print "Strv ", Dumper ($a);
 }
 
@@ -72,42 +74,51 @@ sub walk {
   }
 }
 # print join("\n",@packages);
+print "total ",scalar @packages," packages\n";
 
 my %base_types = ('Glib::Boolean' => 1,
-                  'Glib::Float' => 1,
-                  'Glib::Object' => 1);
+                  'Glib::Float'   => 1,
+                  'Glib::Object'  => 1);
 my %covered;
 my %other;
 foreach my $class (@packages) {
   if ($class =~ /::_LazyLoader$/) { next; }
-  eval { $class->find_property ('x'); };
+  eval { $class->find_property ('x'); }; # force load
   if (! $class->can('list_properties')) { next; }
 
   my @props;
   eval { @props = $class->list_properties; } or next;
+
+  # list_properties includes superclass defined properties, prune to just
+  # those new in the class
+  foreach my $superclass (Glib::Type->list_ancestors ($class)) {
+    if ($superclass eq $class) { next; }
+    foreach my $superprop ($superclass->list_properties) {
+      @props = grep {$_->get_name ne $superprop->get_name} @props;
+    }
+  }
+
   foreach my $pspec (@props) {
     my $type = $pspec->get_value_type;
 
-    if ($type->isa ('Glib::Enum')) {
-      $covered{'Glib::Enum'}{$type} = 1;
-      next;
-    }
     if ($pspec->isa ('Glib::Param::Enum')) {
       $covered{'enum'}{$type} = 1;
       next;
     }
+    # if ($type->isa ('Glib::Enum')) {
+    #   $covered{'Glib::Enum'}{$type} = 1;
+    #   next;
+    # }
     if ($pspec->isa ('Glib::Param::Flags')) {
       $covered{'flags'}{$type} = 1;
       next;
     }
-          
     if ($pspec->isa ('Glib::Param::String')) {
       next;
     }
 
-
     if ($type->isa('Glib::Object')
-       || $pspec->isa ('Glib::Param::Object')) {
+        || $pspec->isa ('Glib::Param::Object')) {
       $covered{'GObject'}{$type} = 1;
       next;
     }
@@ -138,11 +149,11 @@ foreach my $class (@packages) {
       next;
     }
 
-    push @{$other{$type}}, $class;
+    push @{$other{$type}}, "$class . ".$pspec->get_name;
   }
 }
 
-print Dumper (\%covered);
-print Dumper (\%other);
+print Data::Dumper->new([\%covered],['covered'])->Sortkeys(1)->Indent(1)->Dump;
+print Data::Dumper->new([\%other],['other'])->Sortkeys(1)->Indent(1)->Dump;
 
 exit 0;
