@@ -27,22 +27,14 @@ use Test::More;
 if (POSIX::DBL_MANT_DIG() - POSIX::FLT_MANT_DIG() < 10) {
   plan skip_all => 'due to "float" and "double" the same size';
 }
-plan tests => 4;
+plan tests => 5;
 
+SKIP: { eval 'use Test::NoWarnings; 1'
+          or skip 'Test::NoWarnings not available', 1; }
 
 require Glib;
-diag ("Perl-Glib version ",Glib->VERSION);
-diag ("Compiled against Glib version ",
-      Glib::MAJOR_VERSION(), ".",
-      Glib::MINOR_VERSION(), ".",
-      Glib::MICRO_VERSION(), ".");
-diag ("Running on       Glib version ",
-      Glib::major_version(), ".",
-      Glib::minor_version(), ".",
-      Glib::micro_version(), ".");
 
 ## no critic (ProtectPrivateSubs)
-
 
 my $N = POSIX::FLT_MANT_DIG() + 5;
 diag "FLT_MANT_DIG=",POSIX::FLT_MANT_DIG(),

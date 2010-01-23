@@ -17,18 +17,17 @@
 # <http://www.gnu.org/licenses/>.
 
 
-# "libtest-pod-perl (>= 1.00), libtest-weaken-perl, libgtk2-perl"
-# could all be in Build-Depends for more tests, but they're optional
-# and just make the build tools drag in more stuff.
-#
+# Build-Depends could have the "maximum_tests" modules from META.yml
+# for more tests, but they're optional author tests really and would
+# just make the build tools drag in more stuff.
 
 Source: libglib-ex-connectproperties-perl
 Section: perl
 Priority: optional
-Build-Depends: cdbs, debhelper (>= 4)
+Build-Depends: cdbs, debhelper (>= 5)
 Maintainer: Kevin Ryde <user42@zip.com.au>
-Standards-Version: 3.8.0
-Homepage: http://www.geocities.com/user42_kevin/glib-ex-connectproperties/index.html
+Standards-Version: 3.8.3
+Homepage: http://user42.tuxfamily.org/glib-ex-connectproperties/index.html
 Bugs: mailto:user42@zip.com.au
 
 Package: libglib-ex-connectproperties-perl

@@ -23,38 +23,75 @@ use warnings;
 use Glib::Ex::ConnectProperties;
 use Test::More;
 
+use FindBin;
+use File::Spec;
+use lib File::Spec->catdir($FindBin::Bin,'inc');
+use MyTestHelpers;
+
 my $have_gtk2 = eval { require Gtk2 };
 if (! $have_gtk2) {
   plan skip_all => "due to Gtk2 module not available -- $@";
 }
+
+Gtk2->disable_setlocale;  # leave LC_NUMERIC alone for version nums
 my $have_display = Gtk2->init_check;
 if (! $have_display) {
   plan skip_all => "due to no DISPLAY";
 }
-plan tests => 16;
+plan tests => 24;
 
-require Glib;
-diag ("Perl-Glib version ",Glib->VERSION);
-diag ("Compiled against Glib version ",
-      Glib::MAJOR_VERSION(), ".",
-      Glib::MINOR_VERSION(), ".",
-      Glib::MICRO_VERSION(), ".");
-diag ("Running on       Glib version ",
-      Glib::major_version(), ".",
-      Glib::minor_version(), ".",
-      Glib::micro_version(), ".");
-diag ("Perl-Gtk2 version ",Gtk2->VERSION);
-diag ("Compiled against Gtk version ",
-      Gtk2::MAJOR_VERSION(), ".",
-      Gtk2::MINOR_VERSION(), ".",
-      Gtk2::MICRO_VERSION(), ".");
-diag ("Running on       Gtk version ",
-      Gtk2::major_version(), ".",
-      Gtk2::minor_version(), ".",
-      Gtk2::micro_version(), ".");
+SKIP: { eval 'use Test::NoWarnings; 1'
+          or skip 'Test::NoWarnings not available', 1; }
+
+MyTestHelpers::glib_gtk_versions();
+
 
 ## no critic (ProtectPrivateSubs)
 
+#-----------------------------------------------------------------------------
+# Gtk2::Border struct from Gtk2::Entry
+#
+# Crib: Gtk 2.16 needs gtk_init() before creating a Gtk2::Entry, or it gives
+# a slew of warnings, hence this test here instead of Gtk2.t.
+
+{ my $entry = Gtk2::Entry->new;
+  my $pname = 'inner-border';
+  my $pspec = $entry->find_property ($pname)
+    or die "Oops, Gtk2::Entry doesn't have property '$pname'";
+  diag "Gtk2::Entry $pname pspec ",ref $pspec,
+    ", value_type=",$pspec->get_value_type;
+
+  ok (Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       {left=>1,right=>2,top=>3,bottom=>4},
+       {left=>1,right=>2,top=>3,bottom=>4}));
+  ok (! Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       {left=>1,right=>2,top=>3,bottom=>4},
+       {left=>0,right=>2,top=>3,bottom=>4}));
+  ok (! Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       {left=>1,right=>2,top=>3,bottom=>4},
+       {left=>1,right=>0,top=>3,bottom=>4}));
+  ok (! Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       {left=>1,right=>2,top=>3,bottom=>4},
+       {left=>1,right=>2,top=>0,bottom=>4}));
+  ok (! Glib::Ex::ConnectProperties::_pspec_equal
+      ($pspec,
+       {left=>1,right=>2,top=>3,bottom=>4},
+       {left=>1,right=>2,top=>3,bottom=>0}));
+
+  {
+    my $border = $entry->get ($pname); # undef by default
+    ok (Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $border,$border));
+  }
+  {
+    $entry->set ($pname, {left=>1,right=>2,top=>3,bottom=>4});
+    my $border = $entry->get ($pname); # undef by default
+    ok (Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $border,$border));
+  }
+}
 
 #-----------------------------------------------------------------------------
 # strv from AboutDialog

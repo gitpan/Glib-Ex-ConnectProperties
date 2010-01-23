@@ -1,4 +1,4 @@
-# Copyright 2007, 2008, 2009 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -16,6 +16,7 @@
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 package Glib::Ex::ConnectProperties;
+use 5.008;
 use strict;
 use warnings;
 use Carp;
@@ -23,7 +24,7 @@ use Glib;
 use List::Util;
 use Scalar::Util;
 
-our $VERSION = 4;
+our $VERSION = 6;
 
 # set this to 1 for some diagnostic prints
 use constant DEBUG => 0;
@@ -47,8 +48,8 @@ sub new {
 
   foreach my $elem (@array) {
     my ($object, $pname, @params) = @$elem;
-    my $pspec = $object->find_property ($pname)
-      || croak "ConnectProperties: $object has no property '$pname'";
+    $object->find_property ($pname)
+      or croak "ConnectProperties: $object has no property '$pname'";
 
     # replacing element in @array
     $elem = { object => $object,
@@ -336,6 +337,8 @@ __END__
 
 Glib::Ex::ConnectProperties -- link properties between objects
 
+=for test_synopsis my ($check,$widget);
+
 =head1 SYNOPSIS
 
  use Glib::Ex::ConnectProperties;
@@ -396,7 +399,7 @@ quite right, but at least lets the target get close.
 
 In the future the intention is to have some "map" options or transformation
 functions on a per object+property basis, allowing for example a boolean to
-become a strings, or enum values to be changed around, etc.
+become a string, or enum values to be changed around, etc.
 
 =head1 FUNCTIONS
 
@@ -416,8 +419,8 @@ You can keep that to later break the connection explicitly with
 C<disconnect> below, or otherwise you can ignore it.
 
 An initial value is propagated from the first object+property (or the first
-with a readable flag) to set all the others, in case they're not already the
-same.  So put the object with the right initial value first.
+with C<readable> flag) to set all the others, in case they're not already
+the same.  So put the object with the right initial value first.
 
 A ConnectProperties linkage lasts as long as the linked objects exist, but
 it only keeps weak references to those objects, so the linkage doesn't
@@ -452,8 +455,8 @@ If it's already what's wanted then the C<set> call is not made at all.
 =back
 
 The in-progress flag acts against immediate further C<notify>s.  They could
-be avoided by disconnecting or blocking the respective handlers temporarily,
-but that seems more work than ignoring.
+also be avoided by disconnecting or blocking the respective handlers
+temporarily, but that seems more work than ignoring.
 
 The compare-before-set copes with C<freeze_notify>, because in that case the
 C<notify> calls don't come while the "in progress" flag is on, only later,
@@ -461,40 +464,42 @@ perhaps a long time later.
 
 It might be wondered if something simpler is possible, and the short answer
 is that for the general case, not really.  The specific C<set_foo> methods
-on most widgets and objects will skip an unchanged setting, but alas when
-using the generic C<set_property> the protection above is needed.
+on most widgets and objects will often skip an unchanged setting, but alas
+when using the generic C<set_property> the protection above is needed.
 
 =head2 Equality
 
-An existing value and prospective new value for a property above are
-compared using C<values_cmp> in Glib-Perl 1.220 (or a fallback otherwise).
-ParamSpec subclasses can thus control what they consider equal.  For example
-for floats anything within "epsilon" (1e-30 by default) is close enough.
+An existing value and prospective new value are compared using C<values_cmp>
+in Glib-Perl 1.220 or a fallback otherwise.  ParamSpec subclasses can thus
+control what they consider equal.  For example on float point properties
+anything within "epsilon" (1e-30 by default) is close enough.
 
 The core C<Glib::Param::Boxed> only compares by pointer value, which is
 fairly useless because boxed objects are copied so you hardly ever see an
 identical pointer.  ConnectProperties tries to improve this by: Using an
-C<equal> or C<compare> method from the value type, when available
-(eg. C<Gtk2::Gdk::Color>).  Using C<eq> on C<Glib::Scalar>, which may be of
-limited help.  (Subclassing the scalar ParamSpec and giving a new
-C<values_cmp> is probably much better, if/when it's possible.)  And using
-special code on C<Glib::Strv> and C<Gtk2::Border> by content, and
-C<Gtk2::Gdk::Cursor> by C<type> (but bitmap cursors are still by pointer).
+C<equal> or C<compare> method from the value type when available
+(eg. C<Gtk2::Gdk::Color>).  Using C<eq> on C<Glib::Scalar> though that may
+be of limited help (subclassing the scalar ParamSpec and giving a new
+C<values_cmp> is probably much better, if/when it's possible).  And using
+special code on C<Glib::Strv> and C<Gtk2::Border> comparing by content, and
+C<Gtk2::Gdk::Cursor> comparing by C<type> (but bitmap cursors are still only
+by pointer).
 
-Potentially a C<Glib::Param::Object> pspec could benefit from C<equal> or
-C<compare> method on the value type, letting object classes say how their
-contents can be compared.  For now that's not done, since none of the core
-types have such methods, and since like C<Glib::Scalar> it may be better as
-a C<values_cmp> in a ParamSpec subclass, letting both C and Perl code know
-how to compare.
+Potentially a C<Glib::Param::Object> pspec could benefit from using an
+C<equal> or C<compare> method from the value type, so object classes could
+say how their contents can be compared.  For now that's not done, since none
+of the core types have such methods, and since like say C<Glib::Scalar> it
+may be better as a C<values_cmp> in a ParamSpec subclass, so both C and Perl
+code then know how to compare.
 
 =head2 Notifies
 
-Incidentally, if you're writing a widget don't forget you have to explicitly
-C<notify> if changing a property from anywhere outside your C<SET_PROPERTY>
-method.  Duplicate notifies from within that method are ok and are collapsed
-to just one emission at the end.  Of course this is required for any widget,
-but failing to do will mean in particular that ConnectProperties won't work.
+Incidentally, if you're writing an object or widget don't forget you must
+explicitly C<notify> if changing a property from anywhere outside a
+C<SET_PROPERTY> call.  (Duplicate notifies from within C<SET_PROPERTY> are
+ok and are collapsed to just one emission at the end.)  Of course this is
+required for any object or widget, but failing to do will mean in particular
+that ConnectProperties won't work.
 
 =head1 SEE ALSO
 
@@ -502,11 +507,11 @@ L<Glib::Object>
 
 =head1 HOME PAGE
 
-L<http://www.geocities.com/user42_kevin/glib-ex-connectproperties/>
+L<http://user42.tuxfamily.org/glib-ex-connectproperties/index.html>
 
 =head1 LICENSE
 
-Copyright 2007, 2008, 2009 Kevin Ryde
+Copyright 2007, 2008, 2009, 2010 Kevin Ryde
 
 Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published by

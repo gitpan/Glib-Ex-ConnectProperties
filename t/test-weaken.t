@@ -22,23 +22,17 @@ use warnings;
 use Glib::Ex::ConnectProperties;
 use Test::More;
 
-my $have_test_weaken = eval { require Test::Weaken };
+my $have_test_weaken = eval "use Test::Weaken 2.000; 1";
 if (! $have_test_weaken) {
-  plan skip_all => "Test::Weaken not available -- $@";
+  plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
 }
+plan tests => 3;
 
-plan tests => 2;
+SKIP: { eval 'use Test::NoWarnings; 1'
+          or skip 'Test::NoWarnings not available', 1; }
 
 require Glib;
-diag ("Perl-Glib version ",Glib->VERSION);
-diag ("Compiled against Glib version ",
-      Glib::MAJOR_VERSION(), ".",
-      Glib::MINOR_VERSION(), ".",
-      Glib::MICRO_VERSION(), ".");
-diag ("Running on       Glib version ",
-      Glib::major_version(), ".",
-      Glib::minor_version(), ".",
-      Glib::micro_version(), ".");
+diag ("Test::Weaken version ", Test::Weaken->VERSION);
 
 #-----------------------------------------------------------------------------
 package Foo;
@@ -68,7 +62,7 @@ use strict;
 use warnings;
 
 {
-  my @weaken = Test::Weaken::poof
+  my $leaks = Test::Weaken::leaks
     (sub {
        my $obj1 = Foo->new (myprop_one => 1, myprop_two => 1);
        my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
@@ -76,13 +70,14 @@ use warnings;
                                                     [$obj2,'myprop-two']);
        return [ $obj1, $obj2, $conn ];
      });
-  diag "Test-Weaken ", explain \@weaken;
-  my $unfreed = @{$weaken[2]} + @{$weaken[3]};
-  is ($unfreed, 0, 'Test::Weaken deep garbage collection');
+  is ($leaks, undef, 'deep garbage collection');
+  if ($leaks && defined &explain) {
+    diag "Test-Weaken ", explain $leaks;
+  }
 }
 
 {
-  my @weaken = Test::Weaken::poof
+  my $leaks = Test::Weaken::leaks
     (sub {
        my $obj1 = Foo->new (myprop_one => 1, myprop_two => 1);
        my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
@@ -92,9 +87,10 @@ use warnings;
        undef $obj2;
        return $conn;
      });
-  diag "Test-Weaken ", explain \@weaken;
-  my $unfreed = @{$weaken[2]} + @{$weaken[3]};
-  is ($unfreed, 0, 'Test::Weaken with objects already gone');
+  is ($leaks, undef, 'deep garbage collection -- with objects already gone');
+  if ($leaks && defined &explain) {
+    diag "Test-Weaken ", explain $leaks;
+  }
 }
 
 exit 0;

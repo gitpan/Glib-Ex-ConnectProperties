@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -20,26 +20,32 @@
 use strict;
 use warnings;
 use Glib::Ex::ConnectProperties;
-use Test::More tests => 86;
+use Test::More tests => 92;
+
+use FindBin;
+use File::Spec;
+use lib File::Spec->catdir($FindBin::Bin,'inc');
+use MyTestHelpers;
+use Test::Weaken::Gtk2;
+
+SKIP: { eval 'use Test::NoWarnings; 1'
+          or skip 'Test::NoWarnings not available', 1; }
 
 
-my $want_version = 4;
-ok ($Glib::Ex::ConnectProperties::VERSION >= $want_version,
+my $want_version = 6;
+is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
     'VERSION variable');
-ok (Glib::Ex::ConnectProperties->VERSION  >= $want_version,
+is (Glib::Ex::ConnectProperties->VERSION,  $want_version,
     'VERSION class method');
-Glib::Ex::ConnectProperties->VERSION ($want_version);
+{ ok (eval { Glib::Ex::ConnectProperties->VERSION($want_version); 1 },
+      "VERSION class check $want_version");
+  my $check_version = $want_version + 1000;
+  ok (! eval { Glib::Ex::ConnectProperties->VERSION($check_version); 1 },
+      "VERSION class check $check_version");
+}
 
-
-diag ("Perl-Glib version ",Glib->VERSION);
-diag ("Compiled against Glib version ",
-      Glib::MAJOR_VERSION(), ".",
-      Glib::MINOR_VERSION(), ".",
-      Glib::MICRO_VERSION(), ".");
-diag ("Running on       Glib version ",
-      Glib::major_version(), ".",
-      Glib::minor_version(), ".",
-      Glib::micro_version(), ".");
+require Glib;
+MyTestHelpers::glib_gtk_versions();
 
 ## no critic (ProtectPrivateSubs)
 
@@ -80,22 +86,9 @@ use Glib::Object::Subclass
                   ['readable']),
                 ];
 
-#-----------------------------------------------------------------------------
 package main;
 use strict;
 use warnings;
-
-# return true if there's any signal handlers connected to $obj
-sub any_signal_connections {
-  my ($obj) = @_;
-  my @connected = grep {$obj->signal_handler_is_connected ($_)} (0 .. 500);
-  if (@connected) {
-    diag "$obj signal handlers connected: ",join(' ',@connected),"\n";
-    return 1;
-  }
-  return 0;
-}
-
 
 #-----------------------------------------------------------------------------
 # values_cmp
@@ -272,6 +265,14 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   my $conn = Glib::Ex::ConnectProperties->new ([$obj1,'myprop-one'],
                                                [$obj2,'myprop-two']);
 
+  is ($conn->VERSION, $want_version, 'VERSION object method');
+  { ok (eval { $conn->VERSION($want_version); 1 },
+        "VERSION object check $want_version");
+    my $check_version = $want_version + 1000;
+    ok (! eval { $conn->VERSION($check_version); 1 },
+        "VERSION object check $check_version");
+  }
+
   is ($obj1->get ('myprop-one'), 1);
   is ($obj1->get ('myprop-two'), 1);
   is ($obj2->get ('myprop-one'), 0);
@@ -284,8 +285,8 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   is ($obj2->get ('myprop-two'), 0);
 
   $conn->disconnect;
-  ok (! any_signal_connections($obj1));
-  ok (! any_signal_connections($obj2));
+  ok (! MyTestHelpers::any_signal_connections($obj1));
+  ok (! MyTestHelpers::any_signal_connections($obj2));
 
   $obj1->set (myprop_one=>1);
   is ($obj1->get ('myprop-one'), 1);

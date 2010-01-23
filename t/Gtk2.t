@@ -22,79 +22,31 @@ use warnings;
 use Glib::Ex::ConnectProperties;
 use Test::More;
 
+use FindBin;
+use File::Spec;
+use lib File::Spec->catdir($FindBin::Bin,'inc');
+use MyTestHelpers;
+
 my $have_gtk2 = eval { require Gtk2 };
 if (! $have_gtk2) {
   plan skip_all => "due to Gtk2 module not available -- $@";
 }
-plan tests => 23;
+plan tests => 17;
 
-require Glib;
-diag ("Perl-Glib version ",Glib->VERSION);
-diag ("Compiled against Glib version ",
-      Glib::MAJOR_VERSION(), ".",
-      Glib::MINOR_VERSION(), ".",
-      Glib::MICRO_VERSION(), ".");
-diag ("Running on       Glib version ",
-      Glib::major_version(), ".",
-      Glib::minor_version(), ".",
-      Glib::micro_version(), ".");
-diag ("Perl-Gtk2 version ",Gtk2->VERSION);
-diag ("Compiled against Gtk version ",
-      Gtk2::MAJOR_VERSION(), ".",
-      Gtk2::MINOR_VERSION(), ".",
-      Gtk2::MICRO_VERSION(), ".");
-diag ("Running on       Gtk version ",
-      Gtk2::major_version(), ".",
-      Gtk2::minor_version(), ".",
-      Gtk2::micro_version(), ".");
+SKIP: { eval 'use Test::NoWarnings; 1'
+          or skip 'Test::NoWarnings not available', 1; }
+
+MyTestHelpers::glib_gtk_versions();
+
 
 ## no critic (ProtectPrivateSubs)
 
-
-#-----------------------------------------------------------------------------
-# Gtk2::Border struct from Gtk2::Entry
-
-{ my $entry = Gtk2::Entry->new;
-  my $pname = 'inner-border';
-  my $pspec = $entry->find_property ($pname)
-    or die "Oops, Gtk2::Entry doesn't have property '$pname'";
-  diag "Gtk2::Entry $pname pspec ",ref $pspec,
-    ", value_type=",$pspec->get_value_type;
-
-  ok (Glib::Ex::ConnectProperties::_pspec_equal
-      ($pspec,
-       {left=>1,right=>2,top=>3,bottom=>4},
-       {left=>1,right=>2,top=>3,bottom=>4}));
-  ok (! Glib::Ex::ConnectProperties::_pspec_equal
-      ($pspec,
-       {left=>1,right=>2,top=>3,bottom=>4},
-       {left=>0,right=>2,top=>3,bottom=>4}));
-  ok (! Glib::Ex::ConnectProperties::_pspec_equal
-      ($pspec,
-       {left=>1,right=>2,top=>3,bottom=>4},
-       {left=>1,right=>0,top=>3,bottom=>4}));
-  ok (! Glib::Ex::ConnectProperties::_pspec_equal
-      ($pspec,
-       {left=>1,right=>2,top=>3,bottom=>4},
-       {left=>1,right=>2,top=>0,bottom=>4}));
-  ok (! Glib::Ex::ConnectProperties::_pspec_equal
-      ($pspec,
-       {left=>1,right=>2,top=>3,bottom=>4},
-       {left=>1,right=>2,top=>3,bottom=>0}));
-
-  {
-    my $border = $entry->get ($pname); # undef by default
-    ok (Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $border,$border));
-  }
-  {
-    $entry->set ($pname, {left=>1,right=>2,top=>3,bottom=>4});
-    my $border = $entry->get ($pname); # undef by default
-    ok (Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $border,$border));
-  }
-}
-
 #-----------------------------------------------------------------------------
 # boxed -- Gtk2::Border
+#
+# It the past it might have been necessary to load up Gtk2::Entry for it to
+# register Gtk2::Boxed.  That's no longer so, as of Gtk2 circa 1.202, but
+# have this stuff after Gtk2::Entry above anyway.
 
 { my $pspec = Glib::ParamSpec->boxed ('foo','foo','blurb',
                                       'Gtk2::Border', ['readable']);
