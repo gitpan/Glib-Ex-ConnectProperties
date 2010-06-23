@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -23,25 +23,25 @@ use warnings;
 use Glib::Ex::ConnectProperties;
 use Test::More;
 
-use FindBin;
-use File::Spec;
-use lib File::Spec->catdir($FindBin::Bin,'inc');
+use lib 't';
 use MyTestHelpers;
 
-my $have_gtk2 = eval { require Gtk2 };
-if (! $have_gtk2) {
-  plan skip_all => "due to Gtk2 module not available -- $@";
-}
+BEGIN {
+  my $have_gtk2 = eval { require Gtk2 };
+  if (! $have_gtk2) {
+    plan skip_all => "due to Gtk2 module not available -- $@";
+  }
 
-Gtk2->disable_setlocale;  # leave LC_NUMERIC alone for version nums
-my $have_display = Gtk2->init_check;
-if (! $have_display) {
-  plan skip_all => "due to no DISPLAY";
-}
-plan tests => 24;
+  Gtk2->disable_setlocale;  # leave LC_NUMERIC alone for version nums
+  my $have_display = Gtk2->init_check;
+  if (! $have_display) {
+    plan skip_all => "due to no DISPLAY";
+  }
+  plan tests => 24;
 
-SKIP: { eval 'use Test::NoWarnings; 1'
-          or skip 'Test::NoWarnings not available', 1; }
+ SKIP: { eval 'use Test::NoWarnings; 1'
+           or skip 'Test::NoWarnings not available', 1; }
+}
 
 MyTestHelpers::glib_gtk_versions();
 

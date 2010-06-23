@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -24,13 +24,14 @@ use Gtk2 '-init';
 use Glib::Ex::ConnectProperties;
 
 
-# This is a simple but fairly typical use where a control widget (a
-# CheckButton) is tied to a property on another widget (a Label).
+# This example uses a "hash_out" to turn the 0/1 boolean from a CheckBox
+# into an xalign value for a label.  (xalign comes from Gtk2::Misc.)
 #
-# Notice that the label is the first in the ConnectProperties setup.  That
-# means an initial propagation is done copying the label sensitive value to
-# the checkbutton.  You can choose which of the properties is the initial
-# value, after that they're all the same.
+# The label property in this case is treated as if it was write-only so
+# there's no corresponding hash_in or func_in to handle a value coming back
+# out of the label property.  If some other part of the program could update
+# the label too then you'd have to think about how an arbitrary value from
+# it should be turned into a boolean for the checkbox.
 #
 
 my $toplevel = Gtk2::Window->new ('toplevel');
@@ -39,16 +40,15 @@ $toplevel->signal_connect (destroy => sub { Gtk2->main_quit });
 my $vbox = Gtk2::VBox->new (0,0);
 $toplevel->add ($vbox);
 
-my $label = Gtk2::Label->new ('Hello');
-$label->set_alignment (0.5, 0.5);
-$label->set_padding (0, 20);
-$vbox->pack_start ($label, 1,1,0);
-
-my $button = Gtk2::CheckButton->new_with_label ('Click Me');
+my $button = Gtk2::CheckButton->new_with_label ('Label Align Right');
 $vbox->pack_start ($button, 0,0,0);
 
-Glib::Ex::ConnectProperties->new ([$label, 'sensitive'],
-                                  [$button, 'active']);
+my $label = Gtk2::Label->new ('ABC');
+$vbox->pack_start ($label, 1,1,0);
+
+Glib::Ex::ConnectProperties->new ([$button, 'active',
+                                   hash_out => { 0 => 0.1, 1 => 0.9 } ],
+                                  [$label, 'xalign']);
 
 $toplevel->show_all;
 Gtk2->main;

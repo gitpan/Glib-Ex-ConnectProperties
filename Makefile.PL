@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2007, 2008, 2009 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -64,6 +64,8 @@ MyMakeMakerExtras::WriteMakefile
              => { description => 'Stuff used variously for development.',
                   requires => { 'Gtk2'        => 0,
                                 'Gtk2::Pango' => 0,
+                                'Glib::Object::Subclass' => 0,
+                                'Tie::Hash::TwoWay' => 0,
                               },
                 },
            },

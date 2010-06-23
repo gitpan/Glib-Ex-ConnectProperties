@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -19,23 +19,23 @@
 
 use strict;
 use warnings;
-use Glib::Ex::ConnectProperties;
 use Test::More;
 
-use FindBin;
-use File::Spec;
-use lib File::Spec->catdir($FindBin::Bin,'inc');
+BEGIN {
+  my $have_gtk2 = eval { require Gtk2 };
+  if (! $have_gtk2) {
+    plan skip_all => "due to Gtk2 module not available -- $@";
+  }
+  plan tests => 17;
+
+ SKIP: { eval 'use Test::NoWarnings; 1'
+           or skip 'Test::NoWarnings not available', 1; }
+}
+
+use lib 't';
 use MyTestHelpers;
 
-my $have_gtk2 = eval { require Gtk2 };
-if (! $have_gtk2) {
-  plan skip_all => "due to Gtk2 module not available -- $@";
-}
-plan tests => 17;
-
-SKIP: { eval 'use Test::NoWarnings; 1'
-          or skip 'Test::NoWarnings not available', 1; }
-
+require Glib::Ex::ConnectProperties;
 MyTestHelpers::glib_gtk_versions();
 
 
@@ -45,8 +45,7 @@ MyTestHelpers::glib_gtk_versions();
 # boxed -- Gtk2::Border
 #
 # It the past it might have been necessary to load up Gtk2::Entry for it to
-# register Gtk2::Boxed.  That's no longer so, as of Gtk2 circa 1.202, but
-# have this stuff after Gtk2::Entry above anyway.
+# register Gtk2::Boxed.  That's no longer so, as of Gtk2 circa 1.202.
 
 { my $pspec = Glib::ParamSpec->boxed ('foo','foo','blurb',
                                       'Gtk2::Border', ['readable']);

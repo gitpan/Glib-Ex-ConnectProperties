@@ -19,25 +19,25 @@
 
 use strict;
 use warnings;
-use Glib::Ex::ConnectProperties;
-use Test::More tests => 92;
+use Test::More tests => 108;
 
-use FindBin;
-use File::Spec;
-use lib File::Spec->catdir($FindBin::Bin,'inc');
+BEGIN {
+ SKIP: { eval 'use Test::NoWarnings; 1'
+           or skip 'Test::NoWarnings not available', 1; }
+}
+use lib 't';
 use MyTestHelpers;
-use Test::Weaken::Gtk2;
 
-SKIP: { eval 'use Test::NoWarnings; 1'
-          or skip 'Test::NoWarnings not available', 1; }
+require Glib::Ex::ConnectProperties;
 
+my $want_version = 7;
+{
+  is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
+      'VERSION variable');
+  is (Glib::Ex::ConnectProperties->VERSION,  $want_version,
+      'VERSION class method');
 
-my $want_version = 6;
-is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
-    'VERSION variable');
-is (Glib::Ex::ConnectProperties->VERSION,  $want_version,
-    'VERSION class method');
-{ ok (eval { Glib::Ex::ConnectProperties->VERSION($want_version); 1 },
+  ok (eval { Glib::Ex::ConnectProperties->VERSION($want_version); 1 },
       "VERSION class check $want_version");
   my $check_version = $want_version + 1000;
   ok (! eval { Glib::Ex::ConnectProperties->VERSION($check_version); 1 },
@@ -84,6 +84,13 @@ use Glib::Object::Subclass
                   'Blurb.',
                   -2000, 2000, 222,
                   ['readable']),
+
+                 Glib::ParamSpec->string
+                 ('mystring',
+                  'mystring',
+                  'Blurb.',
+                  '', # default
+                  Glib::G_PARAM_READWRITE),
                 ];
 
 package main;
@@ -293,6 +300,82 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   is ($obj1->get ('myprop-two'), 1);
   is ($obj2->get ('myprop-one'), 0);
   is ($obj2->get ('myprop-two'), 0);
+}
+
+#-----------------------------------------------------------------------------
+# bool_not
+
+{
+  my $obj1 = Foo->new (myprop_one => 1);
+  my $obj2 = Foo->new (myprop_one => 0);
+  my $conn = Glib::Ex::ConnectProperties->new
+    ([$obj1,'myprop-one'],
+     [$obj2,'myprop-one', bool_not => 1]);
+
+  ok (  $obj1->get ('myprop-one'));
+  ok (! $obj2->get ('myprop-one'));
+  $obj1->set('myprop-one',0);
+  ok (! $obj1->get ('myprop-one'));
+  ok (  $obj2->get ('myprop-one'));
+  $obj2->set('myprop-one',0);
+  ok (  $obj1->get ('myprop-one'));
+  ok (! $obj2->get ('myprop-one'));
+}
+
+#-----------------------------------------------------------------------------
+# func_in
+
+{
+  my $obj1 = Foo->new (myprop_one => 1);
+  my $obj2 = Foo->new (myprop_one => 0);
+  my @saw_args;
+  my $conn = Glib::Ex::ConnectProperties->new
+    ([$obj1,'myprop-one'],
+     [$obj2,'myprop-one', func_in => sub { @saw_args = @_; return @_ } ]);
+  $obj1->set('myprop-one',0);
+  is_deeply (\@saw_args, [0]);
+}
+
+#-----------------------------------------------------------------------------
+# func_out
+
+{
+  my $obj1 = Foo->new;
+  my $obj2 = Foo->new;
+  my @saw_args;
+  my $conn = Glib::Ex::ConnectProperties->new
+    ([$obj1,'mystring'],
+     [$obj2,'mystring', func_out => sub { @saw_args = @_; return @_ } ]);
+  $obj2->set('mystring','abc');
+  is_deeply (\@saw_args, ['abc']);
+}
+
+#-----------------------------------------------------------------------------
+# hash_in, hash_out
+
+{
+  my $obj1 = Foo->new (mystring => 'a');
+  my $obj2 = Foo->new;
+  my @saw_args;
+  my $conn = Glib::Ex::ConnectProperties->new
+    ([$obj1,'mystring'],
+     [$obj2,'mystring',
+      hash_in  => { 'a' => 'x', 'b' => 'y' },
+      hash_out => { 'x' => 'a', 'y' => 'b' } ]);
+  is ($obj1->get('mystring'), 'a');
+  is ($obj2->get('mystring'), 'x');
+
+  $obj1->set('mystring','b');
+  is ($obj1->get('mystring'), 'b');
+  is ($obj2->get('mystring'), 'y');
+
+  $obj2->set('mystring','x');
+  is ($obj1->get('mystring'), 'a');
+  is ($obj2->get('mystring'), 'x');
+
+  $obj2->set('mystring','z');
+  is ($obj1->get('mystring'), undef);
+  is ($obj2->get('mystring'), 'z');
 }
 
 #-----------------------------------------------------------------------------

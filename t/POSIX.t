@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -20,18 +20,20 @@
 
 use strict;
 use warnings;
-use Glib::Ex::ConnectProperties;
 use POSIX ();
 use Test::More;
 
-if (POSIX::DBL_MANT_DIG() - POSIX::FLT_MANT_DIG() < 10) {
-  plan skip_all => 'due to "float" and "double" the same size';
+BEGIN {
+  if (POSIX::DBL_MANT_DIG() - POSIX::FLT_MANT_DIG() < 10) {
+    plan skip_all => 'due to "float" and "double" the same size';
+  }
+  plan tests => 5;
+
+ SKIP: { eval 'use Test::NoWarnings; 1'
+           or skip 'Test::NoWarnings not available', 1; }
 }
-plan tests => 5;
 
-SKIP: { eval 'use Test::NoWarnings; 1'
-          or skip 'Test::NoWarnings not available', 1; }
-
+require Glib::Ex::ConnectProperties;
 require Glib;
 
 ## no critic (ProtectPrivateSubs)

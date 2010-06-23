@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Glib-Ex-ConnectProperties
-version:            6
+version:            7
 abstract:           Link properties between objects.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -31,8 +31,11 @@ optional_features:
     maximum_devel:
         description:  Stuff used variously for development.
         requires:
-            Gtk2:         0
-            Gtk2::Pango:  0
+            Glib::Object::Subclass:  0
+            Gtk2:                 0
+            Gtk2::Pango:          0
+            Pod::Simple::HTML:    0
+            Tie::Hash::TwoWay:    0
     maximum_examples:
         description:  Be able to run all the example programs.
         requires:
@@ -47,7 +50,7 @@ optional_features:
             Test::Pod:           1.00
             Test::Synopsis:      0
             Test::Weaken:        2.000
-            Test::YAML::Meta:    0.13
+            Test::YAML::Meta:    0.15
             YAML:                0
             YAML::Syck:          0
             YAML::Tiny:          0

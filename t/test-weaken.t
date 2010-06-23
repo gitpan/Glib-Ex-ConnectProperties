@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -19,20 +19,23 @@
 
 use strict;
 use warnings;
-use Glib::Ex::ConnectProperties;
 use Test::More;
 
-my $have_test_weaken = eval "use Test::Weaken 2.000; 1";
-if (! $have_test_weaken) {
-  plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
+BEGIN {
+  my $have_test_weaken = eval "use Test::Weaken 2.000; 1";
+  if (! $have_test_weaken) {
+    plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
+  }
+  diag ("Test::Weaken version ", Test::Weaken->VERSION);
+
+  plan tests => 3;
+
+ SKIP: { eval 'use Test::NoWarnings; 1'
+           or skip 'Test::NoWarnings not available', 1; }
 }
-plan tests => 3;
 
-SKIP: { eval 'use Test::NoWarnings; 1'
-          or skip 'Test::NoWarnings not available', 1; }
-
+require Glib::Ex::ConnectProperties;
 require Glib;
-diag ("Test::Weaken version ", Test::Weaken->VERSION);
 
 #-----------------------------------------------------------------------------
 package Foo;

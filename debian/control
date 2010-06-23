@@ -1,4 +1,4 @@
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 # 
 # This file is part of Glib-Ex-ConnectProperties.
 # 
@@ -26,13 +26,13 @@ Section: perl
 Priority: optional
 Build-Depends: cdbs, debhelper (>= 5)
 Maintainer: Kevin Ryde <user42@zip.com.au>
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 Homepage: http://user42.tuxfamily.org/glib-ex-connectproperties/index.html
 Bugs: mailto:user42@zip.com.au
 
 Package: libglib-ex-connectproperties-perl
 Architecture: all
-Depends: perl (>= 5.8), libglib-perl, ${misc:Depends}
+Depends: perl (>= 5.8), libglib-perl, ${perl:Depends}, ${misc:Depends}
 Description: link properties between objects in Glib-Perl
  Glib::Ex::ConnectProperties establishes a link between properties on
  different objects, so a change to any one of them is propagated to
