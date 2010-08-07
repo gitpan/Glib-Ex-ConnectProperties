@@ -17,6 +17,10 @@ with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
+Version 8, August 2010
+    - new element options read_only, write_only, read_signal, and
+      read_signal_return
+
 Version 7, June 2010
     - new element options func_in, func_out, hash_in, hash_out, bool_not
 

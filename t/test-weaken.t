@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 # Copyright 2008, 2009, 2010 Kevin Ryde
 
@@ -21,18 +21,15 @@ use strict;
 use warnings;
 use Test::More;
 
-BEGIN {
-  my $have_test_weaken = eval "use Test::Weaken 2.000; 1";
-  if (! $have_test_weaken) {
-    plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
-  }
-  diag ("Test::Weaken version ", Test::Weaken->VERSION);
+use lib 't';
+use MyTestHelpers;
+BEGIN { MyTestHelpers::nowarnings() }
 
-  plan tests => 3;
+eval "use Test::Weaken 2.000; 1"
+  or plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
+diag ("Test::Weaken version ", Test::Weaken->VERSION);
 
- SKIP: { eval 'use Test::NoWarnings; 1'
-           or skip 'Test::NoWarnings not available', 1; }
-}
+plan tests => 2;
 
 require Glib::Ex::ConnectProperties;
 require Glib;

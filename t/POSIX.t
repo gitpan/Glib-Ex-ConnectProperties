@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 # Copyright 2008, 2009, 2010 Kevin Ryde
 
@@ -23,15 +23,14 @@ use warnings;
 use POSIX ();
 use Test::More;
 
-BEGIN {
-  if (POSIX::DBL_MANT_DIG() - POSIX::FLT_MANT_DIG() < 10) {
-    plan skip_all => 'due to "float" and "double" the same size';
-  }
-  plan tests => 5;
+use lib 't';
+use MyTestHelpers;
+BEGIN { MyTestHelpers::nowarnings() }
 
- SKIP: { eval 'use Test::NoWarnings; 1'
-           or skip 'Test::NoWarnings not available', 1; }
+if (POSIX::DBL_MANT_DIG() - POSIX::FLT_MANT_DIG() < 10) {
+  plan skip_all => 'due to "float" and "double" the same size';
 }
+plan tests => 4;
 
 require Glib::Ex::ConnectProperties;
 require Glib;

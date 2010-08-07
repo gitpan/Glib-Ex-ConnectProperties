@@ -15,47 +15,48 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 842745cb706f8f2126506f544492f7a80dbe29b3 COPYING
-SHA1 21970694fe8a74b7d2542cdcd658b0f8fe97ebe4 Changes
-SHA1 61087b57c3c861b1ee3bcdb3acbed0fc1b90953c MANIFEST
-SHA1 5354a121e2eef6ad536babbb38b4768b31e306fe MANIFEST.SKIP
-SHA1 eff7a5585d71410890eb75760f8c5a915f2ad767 META.yml
-SHA1 dd41e2e3e7f9e44802f3136b994d15ef9ce0b8ae Makefile.PL
+SHA1 75b5767f1a2cf97aa5c5df4f5cc70cbaa900a841 Changes
+SHA1 959c013173621be9790eae6d21ba18b5a9a49c60 MANIFEST
+SHA1 9f057ed3ba7d042426c4d899f7685b4ae05076b2 MANIFEST.SKIP
+SHA1 a825b0a9387139f0c2fb7c8db15c5f98b98aea98 META.yml
+SHA1 00be7d6f51f1cb4e92d7246ddd5c6d3f994f35dd Makefile.PL
 SHA1 aa3f5263099d3953011b7aa33fe06e36bf860fc0 README
-SHA1 51403d490de23118425cca403a9b97175d13bee6 debian/changelog
+SHA1 60eebc794433b89ecedbc98b13c3f83fc388d1d0 debian/changelog
 SHA1 ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4 debian/compat
-SHA1 343cd3620a95904aa25db0db3cd6a817a1663611 debian/control
+SHA1 6a4d361b89f5f9d96cd9c7f91fad8bcb6d6447e3 debian/control
 SHA1 e79ddc7a072e8cc68a1e33e77b18ef2404bd1f95 debian/copyright
 SHA1 6604489c7bb727e788a4c5ca515dc385efaa0e89 debian/rules
 SHA1 61652cd1568dcf2614df833eba241755eee34e89 debian/source/format
 SHA1 222af98267c863b43256e7302b24c41b21d73788 debian/watch
-SHA1 d3b9aa0603216978e031fc6844948172b77a9a6c devel/infinite-notify.pl
-SHA1 175d6b0dcd76b244f839a799cdaea3048b28c78c devel/misc.pl
-SHA1 e4d9b1c1893c3c8de847c9ddb824e34f0b340abf devel/proptypes.pl
-SHA1 f7adf8b5665ebfd0dc90c315ed3374492202f4dc devel/run.pl
-SHA1 d37586c5079d3b3af7c684f2d403ddac81a10d94 devel/transform.pl
-SHA1 24d019fa17c33d10a1972d4bb48061cf1c9aa327 devel/unichar.pl
-SHA1 4c94539d0196f521377fd9c8ebf3dd5332687d91 examples/func-transform.pl
-SHA1 6e0184331afcd9a96d108916873ceb645a014a4b examples/hash-transform.pl
-SHA1 230dc5d97e8b73047301e29c24be5b949a8947f9 examples/sensitive.pl
-SHA1 5558edc5e44856cc82bb7648d031bfd6c64a346d inc/MyMakeMakerExtras.pm
-SHA1 63427b66eb26f013f10c835b0cf320c93361f310 inc/my_pod2html
-SHA1 32fb3bfad3c2cab60f3e3d81c0bc0cb0774c87b1 lib/Glib/Ex/ConnectProperties.pm
-SHA1 d5d5c83c83918d8c97ca79e92ea840cdf277f01f t/0-META-read.t
+SHA1 5c51a7783ea2b662827c181ebab7929b4ea67d63 devel/hash-undef.pl
+SHA1 ffe300b6feb5da8d171c285f2284de90a9e7a3c1 devel/infinite-notify.pl
+SHA1 004de8fe24cba7b0c0238d9d2111dd26f81f092c devel/misc.pl
+SHA1 4f78b3a502b20915ba3ca3ebd35fed13d1dbb0c6 devel/proptypes.pl
+SHA1 a1bd0cd5c10d8d02030b2f30bc29e1e7fba65258 devel/read-on-signal.pl
+SHA1 ec8f9d6675adaaea63dc7d36951c4a1d1ab42cb9 devel/run.pl
+SHA1 ee1239197538c855cb49a63cf5c278a068178144 devel/transform.pl
+SHA1 073a3847595019262031e5a33e4610bd2293e0e6 devel/unichar.pl
+SHA1 c4f5c02f24ddece0c68aae219ac9d37da1053953 examples/func-transform.pl
+SHA1 cb62d312707f4e47ef11d09e206375a8cd25a554 examples/hash-transform.pl
+SHA1 34a002d86f3e171115862668c4100bd51ed4e0ac examples/sensitive.pl
+SHA1 83dc7aff5595e0efd1eab14964b536fc0aaff291 inc/MyMakeMakerExtras.pm
+SHA1 692a1ddc2ca6b98cac7b48ea40bc1ac1509e8ed9 inc/my_pod2html
+SHA1 b6e764b7c43f2182911b65e7598a823c368fcf71 lib/Glib/Ex/ConnectProperties.pm
+SHA1 9127f78a0dfa04976acbb979dd7862ef59a74c58 t/0-META-read.t
 SHA1 37abd43b41068804ea4bb099fdd89af21be82926 t/0-Test-DistManifest.t
 SHA1 8f93fb4c8f0424a4442cc93c9a2e86342ef55281 t/0-Test-Pod.t
 SHA1 1de8f07883f6bf1a2ef79f2cb8adf1deb3f61cee t/0-Test-Synopsis.t
 SHA1 fb517c2fae5ddac559318bf6a224949115ea3129 t/0-Test-YAML-Meta.t
-SHA1 98274c8f043e7d92f89da6201acf960a00b04ebe t/0-exe-shebang.t
-SHA1 2ed86ab3799fc84816c506a841a82b3867cf0b49 t/ConnectProperties.t
-SHA1 db1b5338c494c56308e9a8215367d9d4beb30cfa t/Gtk2-display.t
-SHA1 f3d0b9ceba3880874a7286d095c1fccc1e23bb8d t/Gtk2.t
-SHA1 e5b9059d5e27d380fc9418095d773ad5f96baa06 t/MyTestHelpers.pm
-SHA1 1ff8f35689b818befd982ab7ea1747f8a7711232 t/POSIX.t
-SHA1 74f1ededc60e976edfd3aec7b091c6e886725eab t/test-weaken.t
+SHA1 e7941fb9830b0c69ae10d49aeed17b46b6188c88 t/ConnectProperties.t
+SHA1 ad6f4d6073275738830cf1597d6aa5e50e8dc6b6 t/Gtk2-display.t
+SHA1 95106cb21e58118b7e77f14c7e87577f0a7c196f t/Gtk2.t
+SHA1 f3bc1eb4ccf4844e7d352ca88452d854c3e6b437 t/MyTestHelpers.pm
+SHA1 46b97d752599bf4bc842693cbc0d98c1104f1dbd t/POSIX.t
+SHA1 e49126634049f7ad8184276c17858f5fda842810 t/test-weaken.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iD8DBQFMIV61LFMCIV9q3ToRAgTBAJ9MFJkCD3k1JdEgJU51lkk1f8Az4wCgkyP0
-GkTKE1suNPLCwjOkJkFzPaI=
-=Rqzz
+iD8DBQFMXKTlLFMCIV9q3ToRAtcRAKC1wCF6uXtUHSsaKXcbw23FS1FteACgjAcN
++kOdK1rOVLlGm1iM+VpsQz0=
+=Xbj7
 -----END PGP SIGNATURE-----

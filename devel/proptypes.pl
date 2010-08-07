@@ -1,6 +1,6 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
-# Copyright 2008, 2009 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -18,8 +18,8 @@
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Finding out what different GParamSpec property types are used.
-
+# Finding out what different GParamSpec property types are used in all
+# Glib::Object types.
 
 use strict;
 use warnings;

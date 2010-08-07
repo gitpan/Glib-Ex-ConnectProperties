@@ -7,9 +7,11 @@ debian/copyright
 debian/rules
 debian/source/format
 debian/watch
+devel/hash-undef.pl
 devel/infinite-notify.pl
 devel/misc.pl
 devel/proptypes.pl
+devel/read-on-signal.pl
 devel/run.pl
 devel/transform.pl
 devel/unichar.pl
@@ -24,7 +26,6 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 README
 SIGNATURE
-t/0-exe-shebang.t
 t/0-META-read.t
 t/0-Test-DistManifest.t
 t/0-Test-Pod.t

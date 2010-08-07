@@ -24,22 +24,25 @@ use Glib;
 use List::Util;
 use Scalar::Util;
 
-our $VERSION = 7;
+our $VERSION = 8;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
 
-# The notify signal connections keep $self alive while the objects live.
-# The only refs to the objects are weak ones in the $elem's.
+# For a readable property the $object signal connection has a hard ref to
+# $elem, and $elem has a hard ref to $self, so $elem is kept alive while the
+# object lives.  The entry for $elem within $self->{'array'} is weak so that
+# $elem goes away when the object is destroyed.
 #
-# An alternative for the connection would be to have $elem in the userdata,
-# and a ref from that elem to $self, with the array element for $elem
-# weakened to avoid being circular.  Basically on a readable property the
-# signal connection keeps $elem and $self alive, and on a non-readable it'd
-# be the other way around with $self keeping $elem alive.  Is there any
-# space saved by a 'self' entry $elem over a two-element array in the
-# connection?
+# For a write-only property there's no signal connection, and $self has a
+# hard ref to the $elem, with nothing from $elem back to $self.  The
+# write-onlys don't keep $self alive, only the readables.  Once the last
+# readable object is destroyed the $self and write-onlys are destroyed.
+#
+# In both cases $elem has only a weak ref to the target $object so a
+# ConnectProperties never keeps a target object alive.
+#
 
 sub new {
   my ($class, @array) = @_;
@@ -47,6 +50,7 @@ sub new {
     croak 'Glib::Ex::ConnectProperties->new(): must have two or more object/property pairs';
   }
 
+  # validate property names before making signal connections
   foreach my $elem (@array) {
     my ($object, $pname, @params) = @$elem;
     $object->find_property ($pname)
@@ -58,8 +62,8 @@ sub new {
               @params };
   }
   my $self = bless { array => \@array }, $class;
+  my $first_readable_elem;
 
-  # make notify signal connections only after input validated
   foreach my $elem (@array) {
     if (my $h = delete $elem->{'hash_in'}) {
       ### hash_in func: "@{[keys %$h]}"
@@ -79,20 +83,20 @@ sub new {
     Scalar::Util::weaken ($elem->{'object'});
 
     my $pspec = $object->find_property ($pname);
-    if ($pspec->get_flags & 'readable') {
-      $elem->{'notify_id'} = $object->signal_connect
-        ("notify::$pname", \&_do_notify, [ $self, $elem ]);
+    if (! delete $elem->{'write_only'}
+        && $pspec->get_flags & 'readable') {
+      $first_readable_elem ||= $elem;
+      $elem->{'self'} = $self;
+      $elem->{'signal_id'} = $object->signal_connect
+        (delete $elem->{'read_signal'} || "notify::$pname",
+         \&_do_read_handler, $elem);
+      Scalar::Util::weaken ($elem);  # the element of $self->{'array'}
     }
   }
 
   # set initially from first readable, in case not already the same
-  foreach my $elem (@array) {
-    my $object = $elem->{'object'};
-    my $pspec  = $object->find_property ($elem->{'pname'});
-    if ($pspec->get_flags & 'readable') {
-      _do_notify ($object, $pspec, [ $self, $elem ]);
-      last;
-    }
+  if ($first_readable_elem) {
+    _do_read_handler ($first_readable_elem->{'object'}, $first_readable_elem);
   }
   return $self;
 }
@@ -112,9 +116,9 @@ sub disconnect {
 
   while (my $elem = pop @$array) {
     my $object = $elem->{'object'} || next; # if not gone due to weakening
-    ###   object: "$object id ".($elem->{'notify_id'}||'undef')
+    ###   object: "$object id ".($elem->{'signal_id'}||'undef')
 
-    my $id = $elem->{'notify_id'};
+    my $id = $elem->{'signal_id'};
     if (! $id) { next; } # no connection on write-only properties
 
     # guard against already disconnected during perl "global destruction",
@@ -126,18 +130,20 @@ sub disconnect {
   }
 }
 
-# 'notify' signal from a connected object
-sub _do_notify {
-  my ($from_object, $from_pspec, $userdata) = @_;
-  my ($self, $from_elem) = @$userdata;
-  ### ConnectProperties _do_notify: "$self $from_object/".$from_pspec->get_name
-  ###   value: $from_object->get_property ($from_pspec->get_name)
+# 'notify' or read_signal handler from a connected object
+sub _do_read_handler {
+  my $from_object = $_[0];
+  my $from_elem = $_[-1];
+  my $self = $from_elem->{'self'};
+
+  ### ConnectProperties _do_read_handler: "$self $from_object/$from_elem->{'pname'}"
+  ###   value: $from_object->get_property ($from_elem->{'pname'})
   ###   notify_in_progress: $self->{'notify_in_progress'}
 
   if ($self->{'notify_in_progress'}) { return; }
   local $self->{'notify_in_progress'} = 1;
 
-  my $from_pname = $from_pspec->get_name;
+  my $from_pname = $from_elem->{'pname'};
   my $from_val = $from_object->get_property ($from_pname);
   ###   propagate value: $from_val
   if (my $func = $from_elem->{'func_out'}) {
@@ -147,14 +153,17 @@ sub _do_notify {
 
   my $array = $self->{'array'};
   for (my $i = 0; $i < @$array; $i++) {
-    my $to_elem = $array->[$i];
-    if ($to_elem == $from_elem) { next; }  # not ourselves
+    my ($to_elem, $to_object);
 
-    my $to_object = $to_elem->{'object'};
-    if (! defined $to_object) {
+    unless (($to_elem = $array->[$i])
+            && ($to_object = $to_elem->{'object'})) {
       ###   elem gone, dropping: $i
       splice @$array, $i, 1;
       $i--;
+      next;
+    }
+    if ($to_elem == $from_elem         # not ourselves
+        || $to_elem->{'read_only'}) {  # forced not write
       next;
     }
 
@@ -190,6 +199,7 @@ sub _do_notify {
     ###   store to: "$to_object/$to_pname"
     $to_object->set_property ($to_pname, $to_val);
   }
+  return $from_elem->{'read_signal_return'};
 }
 
 sub _pspec_equal {
@@ -238,10 +248,16 @@ sub _pspec_equal {
 
 sub _make_hash_func {
   my ($h) = @_;
-  return sub { $h->{$_[0]} };
+  ### _make_hash_func()
+  ### $h
+  if (defined(tied($h))) {
+    return sub { $h->{$_[0]} };
+  } else {
+    return sub { defined $_[0] ? $h->{$_[0]} : undef };
+  }
 }
 sub _bool_not {
-  ! $_[0]
+  return ! $_[0];
 }
 
 #------------------------------------------------------------------------------
@@ -369,6 +385,9 @@ BEGIN {
 1;
 __END__
 
+=for stopwords Gtk2 CheckButton ConnectProperties enum arrayref ParamSpec
+pspecs Ryde Glib-Ex-ConnectProperties
+
 =head1 NAME
 
 Glib::Ex::ConnectProperties -- link properties between objects
@@ -378,8 +397,9 @@ Glib::Ex::ConnectProperties -- link properties between objects
 =head1 SYNOPSIS
 
  use Glib::Ex::ConnectProperties;
- my $conn = Glib::Ex::ConnectProperties->new ([$check,'active'],
-                                              [$widget,'visible']);
+ my $conn = Glib::Ex::ConnectProperties->new
+                        ([ $check,  'active' ],
+                         [ $widget, 'visible' ]);
 
  $conn->disconnect;   # explicit disconnect
 
@@ -404,7 +424,7 @@ what it's controlling, no matter how the target changes.
 
 =head2 Property Types
 
-String, number, enum, flags, and object property types are supported.  Some
+String, number, enum, flags, and object property types are supported.  A few
 boxed types like C<Gtk2::Gdk::Color> work too, though others may not (see
 L</Equality> below).
 
@@ -412,16 +432,17 @@ Read-only properties can be given.  They're propagated out to the other
 linked properties but changes in those others are not stored back.  This can
 leave different values, which rather defeats the purpose of the linkage.
 Linking a read-only probably only makes sense if the read-only one is the
-only one changing.
+only one changing.  See the C<read_only> option below to force read-only.
 
 Write-only properties can be given.  Nothing is read out of them, they're
 just set from changes in the other linked properties.  Write-only properties
-are often pseudo "add" methods etc, so it's probably unlikely linking a
-write-only will do much good.
+are often pseudo "add" methods etc, so it's a little unlikely linking a
+write-only will be wanted.  See the C<write_only> option below to force
+write-only.
 
-It works to connect two properties on the same object; doing so can ensure
+It works to connect two properties on the same object and this can ensure
 they update together.  It also works to have two different ConnectProperties
-with an object/property in common; a change coming from one group propagates
+with an object/property in common, a change coming from one group propagates
 through to the other.  Such a setup arises quite naturally if you've got two
 controls for the same target; neither needs to know the other exists.
 
@@ -432,7 +453,8 @@ controls for the same target; neither needs to know the other exists.
 =item C<< $conn = Glib::Ex::ConnectProperties->new ([$obj1,$pname1], [$obj,$pname2], ...) >>
 
 Connect two or more given object+property combinations.  Each argument is an
-arrayref with an object and a property name.  For example
+arrayref with an object, a property name, and possible further options
+described below.  For example
 
     $conn = Glib::Ex::ConnectProperties->new
                 ([$aa_object, 'one-prop'],
@@ -456,28 +478,98 @@ Disconnect the given ConnectProperties linkage.
 
 =back
 
-=head1 VALUE TRANSFORMATIONS
+=head1 OPTIONS
 
-Before storing a value it's put through C<value_validate> on the target
-ParamSpec (in Glib-Perl 1.220 where that method is available).  This clamps
-numbers which might be out of range, might manipulate string contents, etc.
-The result may not be quite right, but at least lets the target get close.
-
-General value transformations can be specified with parameters in each
-object/property element.  These transformation are applied before
-C<value_validate>.  For example to negate a boolean property,
+Various options can be given in each C<[$object,$propname]> element as
+key/value pairs.  For example,
 
     Glib::Ex::ConnectProperties->new
         ([$checkbutton, 'active'],
          [$label, 'sensitive', bool_not => 1]);
 
-The possible parameters are
+=head2 General Options
+
+=over
+
+=item C<< read_only => $bool >>
+
+Treat the property as read-only, ignoring any C<writable> flag in its
+ParamSpec.  This is probably of limited use, but might for instance stop
+other properties writing back to a master control.
+
+=item C<< write_only => $bool >>
+
+Treat the property as write-only, ignoring any C<readable> flag in its
+ParamSpec.
+
+One use for this is display things such as a C<Gtk2::Label> which you want
+to set, but don't want to read back.  If the value is mangled for display
+(see L<Value Transformations> below) then there might not be an easy reverse
+transformation to read back anyway.
+
+    Glib::Ex::ConnectProperties->new
+        ([$job, 'status'],
+         [$label, 'text', write_only => 1]);
+
+Of course an explicit signal handler can do a one-way set like this, but
+ConnectProperties is a couple less lines.
+
+=item C<< read_signal => $signame >>
+
+Connect to C<$signame> to see changes to the property.  The default
+C<notify::$propname> means a property change is immediately seen and
+propagated.  A different signal can be used to do it at other times instead.
+
+For example on C<Gtk2::Entry> the C<text> property notifies for every
+character typed by the user.  With the C<activate> signal you can instead
+take the value only when the user presses Return.
+
+    Glib::Ex::ConnectProperties->new
+        ([$entry, 'text', read_signal => 'activate'],
+         [$label, 'text']);
+
+The signal can have any parameters.  Usually the only sensible signals are
+those like C<activate> which are some sort of user action.
+
+=item C<< read_signal_return => $signame >>
+
+The return value for the C<read_signal> handler.  The default return is
+C<undef>.
+
+Most C<read_signal> candidates are C<void>, so no particular return value is
+needed.  But as an example if a widget event was a good time to look at a
+property then a return of C<EVENT_PROPAGATE> would be wanted to let other
+handlers see the event too.
+
+    Glib::Ex::ConnectProperties->new
+        ([$widget, 'window',
+          read_signal => 'map-event',
+          read_signal_return => Gtk2::EVENT_PROPAGATE ],
+         [$drawing_thing, 'target-window']);
+
+=back
+
+=head2 Value Transformations
+
+The following value transformations can be specified with parameters in each
+object/property element.
+
+Before storing a value it's also put through C<value_validate> on the target
+ParamSpec (in Glib-Perl 1.220 where that method is available).  This clamps
+numbers which might be out of range, may manipulate string contents, etc.
+The result might not be the exact desired value, but is at least something
+which can be set.
 
 =over
 
 =item C<< bool_not => 1 >>
 
-Negate with the Perl C<!> operator.
+Negate with the Perl C<!> operator.  For example a check button which when
+checked makes a label insensitive,
+
+    Glib::Ex::ConnectProperties->new
+        ([$checkbutton, 'active'],
+         [$label, 'sensitive', bool_not => 1]);
 
 =item C<< func_in => $coderef >>
 
@@ -494,19 +586,22 @@ Apply C<< $value = $hashref->{$value} >> to transform values going in or
 coming out.
 
 If a C<$value> doesn't exist in the hash then the result will be C<undef> in
-the usual way.  Various tie modules can change that in creative wasy, for
+the usual way.  Various tie modules can change that in creative ways, for
 example C<Hash::WithDefaults> to look in fallback hashes.
+
+The hashes are not copied, so future changes to their contents will be used
+by the ConnectProperties, though there's nothing to forcibly update values
+if the current settings might be affected.
 
 =back
 
-For a read-only or write-only property only the corresponding out or in
-transformation is needed.  For a read-write property the "in" should
-generally be the inverse of "out".  Nothing is done to enforce that, but
-strange things are likely to happen if the two are inconsistent.
+A read-only or write-only property only needs the corresponding "out" or
+"in" transformation, including those with the C<read_only> or C<write_only>
+options (see L</General Options> above).
 
-Hashes are not copied, so future changes to their contents will be used by
-the ConnectProperties, though there's nothing to forcibly update values if
-the current settings might be affected.
+For a read-write property the "in" should generally be the inverse of "out".
+Nothing is done to enforce that, but strange things are likely to happen if
+the two are inconsistent.
 
 =head1 IMPLEMENTATION NOTES
 
@@ -530,18 +625,18 @@ If already right then the C<set> call is not made at all.
 
 =back
 
-The in-progress flag acts against immediate further C<notify>s.  Temporarily
-disconnecting or blocking the handlers could do the same, but that seems
-more work than ignoring.
+The in-progress flag acts against immediate further C<notify>s.  This could
+be done by temporarily disconnecting or blocking the handlers too, but that
+seems more work than ignoring.
 
 The compare-before-set copes with C<freeze_notify> because in that case the
 C<notify> calls don't come while the "in progress" flag is on, only later,
 perhaps a long time later.
 
-If the C<func_in> / C<func_out> transformations are inconsistent, so a value
-going in is always different from what comes out, then usually the "in
+If the C<func_in> / C<func_out> transformations are inconsistent, so that a
+value going in is always different from what comes out, then usually the "in
 progress" case prevents an infinite loop, so long as the program eventually
-reaches a state with no C<freeze_notify>'s in force.
+reaches a state with no C<freeze_notify> in force.
 
 It might be wondered if something simpler is possible.  For the general case
 alas no, not really.  The specific C<set_foo> methods on most widgets and
@@ -584,35 +679,36 @@ only by pointer.
 =item *
 
 C<Glib::Scalar> compared with C<eq>.  This may be of limited help and it's
-probably much better to subclass C<Glib::Param::Scalar> and make a
-type-specific C<values_cmp>, if/when that's possible.
+probably better to subclass C<Glib::Param::Scalar> and make a type-specific
+C<values_cmp>, if/when that's possible.
 
 =back
 
-Potentially C<Glib::Param::Object> pspecs could benefit from using an
-C<equal> or C<compare> method on its value type as done for boxed objects.
-But usually when setting a C<Glib::Object> it's a particular object which is
+C<Glib::Param::Object> pspecs could perhaps benefit from using an C<equal>
+or C<compare> method on the value type the same as for boxed objects.  But
+usually when setting a C<Glib::Object> it's a particular object which is
 desired, not just contents.  If that's not so then as with C<Glib::Scalar>
-it may be better as a C<values_cmp> in a ParamSpec subclass to express which
-different objects are equal enough, for both C and Perl code.
+it may be better as a C<values_cmp> in a ParamSpec subclass expressing which
+different objects are equal enough (which, if/when possible, would express
+that to both C and Perl code).
 
 =head2 Notifies
 
 If you're writing an object or widget don't forget to explicitly C<notify>
 when changing a property outside of C<SET_PROPERTY>.  For example,
 
-    sub set_position {
+    sub set_foo {
       my ($self, $newval) = @_;
-      if ($self->{'position'} != $newval) {
-        $self->{'position'} = $newval;
-        $self->notify('position');
+      if ($self->{'foo'} != $newval) {
+        $self->{'foo'} = $newval;
+        $self->notify('foo');
       }
     }
 
 This sort of thing is required for any object or widget, but failing to do
-so in particular means ConnectProperties won't work.  C<SET_PROPERTY> can
-call out to a setter function like this to re-use code if desired.  In that
-case the extra C<notify> call is harmless and is collapsed to just one
+so will in particular mean ConnectProperties doesn't work.  C<SET_PROPERTY>
+can call out to a setter function like this to re-use code.  In that case
+the extra C<notify> call is harmless and Glib collapses it to just one
 notify at the end of C<SET_PROPERTY>.
 
 =head1 SEE ALSO

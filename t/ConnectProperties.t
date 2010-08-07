@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 # Copyright 2008, 2009, 2010 Kevin Ryde
 
@@ -19,18 +19,15 @@
 
 use strict;
 use warnings;
-use Test::More tests => 108;
+use Test::More tests => 116;
 
-BEGIN {
- SKIP: { eval 'use Test::NoWarnings; 1'
-           or skip 'Test::NoWarnings not available', 1; }
-}
 use lib 't';
 use MyTestHelpers;
+BEGIN { MyTestHelpers::nowarnings() }
 
 require Glib::Ex::ConnectProperties;
 
-my $want_version = 7;
+my $want_version = 8;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');
@@ -57,6 +54,11 @@ use warnings;
 use Glib;
 use Glib::Object::Subclass
   'Glib::Object',
+  signals => { 'my-sig' => { return_type => 'Glib::String',
+                             flags       => ['run-last'],
+                             param_types => ['Glib::String','Glib::String'],
+                           }
+             },
   properties => [Glib::ParamSpec->boolean
                  ('myprop-one',
                   'myprop-one',
@@ -303,6 +305,31 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
+# read_signal
+
+{
+  my $obj1 = Foo->new (mystring => 'one');
+  my $obj2 = Foo->new (mystring => 'two');
+  my @saw_args;
+  my $conn = Glib::Ex::ConnectProperties->new
+    ([$obj1,'mystring'],
+     [$obj2,'mystring',
+      read_signal => 'my-sig',
+      read_signal_return => 'rsigret' ]);
+  is ($obj1->get ('mystring'), 'one', 'read_signal initial obj1');
+  is ($obj2->get ('mystring'), 'one', 'read_signal initial obj2');
+
+  $obj2->set(mystring => 'abc');
+  is ($obj1->get ('mystring'), 'one', 'read_signal no change obj1');
+  is ($obj2->get ('mystring'), 'abc', 'read_signal no change obj2');
+
+  my $ret = $obj2->signal_emit ('my-sig', 'def', 'jki');
+  is ($ret, 'rsigret', 'read_signal_return value');
+  is ($obj1->get ('mystring'), 'abc', 'read_signal propagate to obj1');
+  is ($obj2->get ('mystring'), 'abc', 'read_signal propagate in obj2');
+}
+
+#-----------------------------------------------------------------------------
 # bool_not
 
 {
@@ -412,6 +439,23 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   $obj2->set (myprop_two=>0);
   is (scalar @{$conn->{'array'}}, 1,
       'notice linked object gone');
+}
+
+{
+  my $obj1 = Foo->new (myprop_one => 1, myprop_two => 1);
+  my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
+  my $conn = Glib::Ex::ConnectProperties->new ([$obj1,'myprop-one'],
+                                               [$obj2,'myprop-two',
+                                                write_only => 1]);
+  require Scalar::Util;
+
+  my $weak_obj1 = $obj1;
+  Scalar::Util::weaken ($weak_obj1);
+  $obj1 = undef;
+  is ($weak_obj1, undef, 'obj1 not kept alive');
+
+  Scalar::Util::weaken ($conn);
+  is ($conn, undef, 'conn garbage collected when last readable gone');
 }
 
 #-----------------------------------------------------------------------------
