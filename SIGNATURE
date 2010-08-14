@@ -15,13 +15,13 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 842745cb706f8f2126506f544492f7a80dbe29b3 COPYING
-SHA1 75b5767f1a2cf97aa5c5df4f5cc70cbaa900a841 Changes
+SHA1 c8c00242a120b54ed6adb9b206ef927a4fddbecf Changes
 SHA1 959c013173621be9790eae6d21ba18b5a9a49c60 MANIFEST
 SHA1 9f057ed3ba7d042426c4d899f7685b4ae05076b2 MANIFEST.SKIP
-SHA1 a825b0a9387139f0c2fb7c8db15c5f98b98aea98 META.yml
+SHA1 8f5c85ceff21ba940d1a7a044e8ee76aa62de92a META.yml
 SHA1 00be7d6f51f1cb4e92d7246ddd5c6d3f994f35dd Makefile.PL
 SHA1 aa3f5263099d3953011b7aa33fe06e36bf860fc0 README
-SHA1 60eebc794433b89ecedbc98b13c3f83fc388d1d0 debian/changelog
+SHA1 549fde6b2fe1b6d1b02fca1b1a8d9ea55c7cd353 debian/changelog
 SHA1 ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4 debian/compat
 SHA1 6a4d361b89f5f9d96cd9c7f91fad8bcb6d6447e3 debian/control
 SHA1 e79ddc7a072e8cc68a1e33e77b18ef2404bd1f95 debian/copyright
@@ -39,24 +39,24 @@ SHA1 073a3847595019262031e5a33e4610bd2293e0e6 devel/unichar.pl
 SHA1 c4f5c02f24ddece0c68aae219ac9d37da1053953 examples/func-transform.pl
 SHA1 cb62d312707f4e47ef11d09e206375a8cd25a554 examples/hash-transform.pl
 SHA1 34a002d86f3e171115862668c4100bd51ed4e0ac examples/sensitive.pl
-SHA1 83dc7aff5595e0efd1eab14964b536fc0aaff291 inc/MyMakeMakerExtras.pm
+SHA1 3f00375a75a28eb28c9216d722220e52aec8e58d inc/MyMakeMakerExtras.pm
 SHA1 692a1ddc2ca6b98cac7b48ea40bc1ac1509e8ed9 inc/my_pod2html
-SHA1 b6e764b7c43f2182911b65e7598a823c368fcf71 lib/Glib/Ex/ConnectProperties.pm
+SHA1 8e18716483793046dd7c3d850de9fd8d5df6d1b0 lib/Glib/Ex/ConnectProperties.pm
 SHA1 9127f78a0dfa04976acbb979dd7862ef59a74c58 t/0-META-read.t
 SHA1 37abd43b41068804ea4bb099fdd89af21be82926 t/0-Test-DistManifest.t
 SHA1 8f93fb4c8f0424a4442cc93c9a2e86342ef55281 t/0-Test-Pod.t
 SHA1 1de8f07883f6bf1a2ef79f2cb8adf1deb3f61cee t/0-Test-Synopsis.t
 SHA1 fb517c2fae5ddac559318bf6a224949115ea3129 t/0-Test-YAML-Meta.t
-SHA1 e7941fb9830b0c69ae10d49aeed17b46b6188c88 t/ConnectProperties.t
+SHA1 3491a9721500e15c2addfcc9eefbb758bc6c1593 t/ConnectProperties.t
 SHA1 ad6f4d6073275738830cf1597d6aa5e50e8dc6b6 t/Gtk2-display.t
 SHA1 95106cb21e58118b7e77f14c7e87577f0a7c196f t/Gtk2.t
-SHA1 f3bc1eb4ccf4844e7d352ca88452d854c3e6b437 t/MyTestHelpers.pm
+SHA1 b98ec63aaa140101fe850d117c483d88b25a32a9 t/MyTestHelpers.pm
 SHA1 46b97d752599bf4bc842693cbc0d98c1104f1dbd t/POSIX.t
 SHA1 e49126634049f7ad8184276c17858f5fda842810 t/test-weaken.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iD8DBQFMXKTlLFMCIV9q3ToRAtcRAKC1wCF6uXtUHSsaKXcbw23FS1FteACgjAcN
-+kOdK1rOVLlGm1iM+VpsQz0=
-=Xbj7
+iD8DBQFMZd5RLFMCIV9q3ToRAnNHAKCLRAuMUYmCwOgK6eZCxRY0QbF+HgCeJNBb
+fFSL01Hl48GlehVfNuPsUWM=
+=WmRX
 -----END PGP SIGNATURE-----

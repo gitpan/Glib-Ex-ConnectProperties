@@ -27,7 +27,7 @@ BEGIN { MyTestHelpers::nowarnings() }
 
 require Glib::Ex::ConnectProperties;
 
-my $want_version = 8;
+my $want_version = 9;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');

@@ -24,7 +24,7 @@ use Glib;
 use List::Util;
 use Scalar::Util;
 
-our $VERSION = 8;
+our $VERSION = 9;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

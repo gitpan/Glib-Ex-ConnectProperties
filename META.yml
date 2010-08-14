@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Glib-Ex-ConnectProperties
-version:            8
+version:            9
 abstract:           Link properties between objects.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -36,6 +36,7 @@ optional_features:
             Gtk2::Pango:          0
             Pod::Simple::HTML:    0
             Tie::Hash::TwoWay:    0
+            warnings::unused:     0
     maximum_examples:
         description:  Be able to run all the example programs.
         requires:
