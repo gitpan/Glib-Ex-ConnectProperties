@@ -35,6 +35,10 @@ MyMakeMakerExtras::WriteMakefile
    PREREQ_PM    => {
                     # any version should be ok
                     'Glib' => 0,
+                    'Glib::Object::Subclass' => 0,
+
+                    'Module::Load' => 0,
+                    'Glib::Ex::SignalIds' => 5, # version 5 for add()
                    },
    MIN_PERL_VERSION => 5.008,
 
@@ -51,6 +55,7 @@ MyMakeMakerExtras::WriteMakefile
         => { maximum_tests
              => { description => 'Have "make test" do as much as possible.',
                   requires => { 'Test::Weaken' => '2.000',
+                                'Module::Util' => 0,
                                 'Gtk2' => 0,
                               },
                 },
@@ -65,6 +70,8 @@ MyMakeMakerExtras::WriteMakefile
                                 'Gtk2::Pango' => 0,
                                 'Glib::Object::Subclass' => 0,
                                 'Tie::Hash::TwoWay' => 0,
+                                'Goo::Canvas' => 0,
+                                'Smart::Comments' => 0,
                               },
                 },
            },

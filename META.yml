@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Glib-Ex-ConnectProperties
-version:            9
+version:            10
 abstract:           Link properties between objects.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -11,8 +11,11 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    Glib:  0
-    perl:  5.008
+    Glib:                 0
+    Glib::Ex::SignalIds:  5
+    Glib::Object::Subclass:  0
+    Module::Load:         0
+    perl:                 5.008
 resources:
     homepage:  http://user42.tuxfamily.org/glib-ex-connectproperties/index.html
     license:   http://www.gnu.org/licenses/gpl.html
@@ -32,9 +35,11 @@ optional_features:
         description:  Stuff used variously for development.
         requires:
             Glib::Object::Subclass:  0
+            Goo::Canvas:          0
             Gtk2:                 0
             Gtk2::Pango:          0
             Pod::Simple::HTML:    0
+            Smart::Comments:      0
             Tie::Hash::TwoWay:    0
             warnings::unused:     0
     maximum_examples:
@@ -45,6 +50,7 @@ optional_features:
         description:  Have "make test" do as much as possible.
         requires:
             Gtk2:                0
+            Module::Util:        0
             Parse::CPAN::Meta:   0
             Test::DistManifest:  0
             Test::Pod:           1.00

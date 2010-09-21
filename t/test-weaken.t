@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Gtk2-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
+use 5.008;
 use strict;
 use warnings;
 use Test::More;
@@ -29,38 +30,38 @@ eval "use Test::Weaken 2.000; 1"
   or plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
 diag ("Test::Weaken version ", Test::Weaken->VERSION);
 
-plan tests => 2;
+plan tests => 4;
 
 require Glib::Ex::ConnectProperties;
 require Glib;
 
 #-----------------------------------------------------------------------------
-package Foo;
-use strict;
-use warnings;
-use Glib;
-use Glib::Object::Subclass
-  Glib::Object::,
-  properties => [Glib::ParamSpec->boolean
-                 ('myprop-one',
-                  'myprop-one',
-                  'Blurb.',
-                  0,
-                  Glib::G_PARAM_READWRITE),
+{
+  package Foo;
+  use strict;
+  use warnings;
+  use Glib;
+  use Glib::Object::Subclass
+    'Glib::Object',
+      properties => [Glib::ParamSpec->boolean
+                     ('myprop-one',
+                      'myprop-one',
+                      'Blurb.',
+                      0,
+                      Glib::G_PARAM_READWRITE),
 
-                 Glib::ParamSpec->boolean
-                 ('myprop-two',
-                  'myprop-two',
-                  'Blurb.',
-                  0,
-                  Glib::G_PARAM_READWRITE)
-                ];
+                     Glib::ParamSpec->boolean
+                     ('myprop-two',
+                      'myprop-two',
+                      'Blurb.',
+                      0,
+                      Glib::G_PARAM_READWRITE),
+                    ];
+}
 
 #-----------------------------------------------------------------------------
-package main;
-use strict;
-use warnings;
 
+# the "permanent" new() connp object is gc'ed when all its objects go
 {
   my $leaks = Test::Weaken::leaks
     (sub {
@@ -70,7 +71,7 @@ use warnings;
                                                     [$obj2,'myprop-two']);
        return [ $obj1, $obj2, $conn ];
      });
-  is ($leaks, undef, 'deep garbage collection');
+  is ($leaks, undef, 'new() deep gc');
   if ($leaks && defined &explain) {
     diag "Test-Weaken ", explain $leaks;
   }
@@ -87,7 +88,39 @@ use warnings;
        undef $obj2;
        return $conn;
      });
-  is ($leaks, undef, 'deep garbage collection -- with objects already gone');
+  is ($leaks, undef, 'new() deep gc -- with objects already gone');
+  if ($leaks && defined &explain) {
+    diag "Test-Weaken ", explain $leaks;
+  }
+}
+
+{
+  my $leaks = Test::Weaken::leaks
+    (sub {
+       my $obj1 = Foo->new (myprop_one => 1, myprop_two => 1);
+       my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
+       my $conn = Glib::Ex::ConnectProperties->dynamic ([$obj1,'myprop-one'],
+                                                        [$obj2,'myprop-two']);
+       return [ $obj1, $obj2, $conn ];
+     });
+  is ($leaks, undef, 'dynamic() deep gc');
+  if ($leaks && defined &explain) {
+    diag "Test-Weaken ", explain $leaks;
+  }
+}
+
+{
+  my $leaks = Test::Weaken::leaks
+    (sub {
+       my $obj1 = Foo->new (myprop_one => 1, myprop_two => 1);
+       my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
+       my $conn = Glib::Ex::ConnectProperties->dynamic ([$obj1,'myprop-one'],
+                                                        [$obj2,'myprop-two']);
+       undef $obj1;
+       undef $obj2;
+       return $conn;
+     });
+  is ($leaks, undef, 'dynamic() deep gc -- with objects already gone');
   if ($leaks && defined &explain) {
     diag "Test-Weaken ", explain $leaks;
   }

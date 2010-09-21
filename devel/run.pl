@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
-
+use 5.008;
 use strict;
 use warnings;
 use Glib::Ex::ConnectProperties;
@@ -37,15 +37,15 @@ $vbox->add ($label);
 my $label2 = Gtk2::Label->new ('');
 $vbox->add ($label2);
 
-my $press_button = Gtk2::CheckButton->new_with_label ('Press');
-$vbox->add ($press_button);
-$press_button->signal_connect
+my $sensitive_button = Gtk2::CheckButton->new_with_label ('Sensitive');
+$vbox->add ($sensitive_button);
+$sensitive_button->signal_connect
   ('notify::active' => sub {
      print "$progname: press_button active now ",
-       $press_button->get('active'),"\n"; });
+       $sensitive_button->get('active'),"\n"; });
 
 my $conn = Glib::Ex::ConnectProperties->new ([$label,'sensitive'],
-                                             [$press_button,'active'],
+                                             [$sensitive_button,'active'],
                                              [$label2,'label']);
 require Data::Dumper;
 print Data::Dumper->new([$conn],['conn'])->Sortkeys(1)->Dump;
@@ -53,7 +53,7 @@ require Scalar::Util;
 Scalar::Util::weaken ($conn);
 
 {
-  my $button = Gtk2::CheckButton->new_with_label ('Other');
+  my $button = Gtk2::CheckButton->new_with_label ('Another Sensitive');
   $vbox->add ($button);
 
   Glib::Ex::ConnectProperties->new ([$label,'sensitive'],
@@ -78,12 +78,18 @@ if (1) {
 {
   my $button = Gtk2::Button->new_with_label ('Freeze');
   $vbox->add ($button);
-  $button->signal_connect (clicked => sub { $press_button->freeze_notify });
+  $button->signal_connect (clicked => sub {
+                             print "$progname: freeze\n";
+                             $sensitive_button->freeze_notify;
+                           });
 }
 {
   my $button = Gtk2::Button->new_with_label ('Thaw');
   $vbox->add ($button);
-  $button->signal_connect (clicked => sub { $press_button->thaw_notify });
+  $button->signal_connect (clicked => sub {
+                             print "$progname: thaw\n";
+                             $sensitive_button->thaw_notify;
+                           });
 }
 
 
@@ -138,3 +144,50 @@ Gtk2->main;
 
 print "$progname: conn ",(defined $conn ? "defined\n" : "not defined\n");
 exit 0;
+
+
+__END__
+
+$widget->style_get_property
+# no corresponding set ?
+# mangle underlying rcstyle ?
+
+$goocanvas->style_set_property doesn't emit a signal
+
+
+
+$from_val = ($from_elem->{'child_property'}
+             ? do {
+               my $from_parent;
+               ($from_parent = $from_object->get_parent)
+                 && $from_parent->child_get_property ($from_object,
+                                                      $from_pname)
+               }
+             : $from_object->get_property ($from_pname));
+
+my $to_child_property;
+if ($to_child_property = $from_elem->{'child_property'}) {
+  $to_parent = $to_object->get_parent || next;
+}
+
+                   ($to_child_property
+                     ? $to_parent->child_get_property ($to_object, $to_pname)
+                     : $to_object->get_property ($to_pname))
+
+if ($to_child_property) {
+  if (my $set_func = $to_parent->can('set_child_property')) {
+    &$set_func ($to_parent, $to_object, $to_pname, $to_val);
+  } else {
+    $to_parent->child_set_property($to_object, $to_pname, $to_val)
+  }
+} else {
+  $to_object->set_property ($to_pname, $to_val);
+}
+
+$elem->{'get_method'} = ($child_property
+                         ? \&_child_get_property
+                         : 'get_property');
+$elem->{'set_method'} = ($child_property
+                         ? \&_child_set_property
+                         : 'set_property');
+

@@ -15,48 +15,62 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 842745cb706f8f2126506f544492f7a80dbe29b3 COPYING
-SHA1 c8c00242a120b54ed6adb9b206ef927a4fddbecf Changes
-SHA1 959c013173621be9790eae6d21ba18b5a9a49c60 MANIFEST
-SHA1 9f057ed3ba7d042426c4d899f7685b4ae05076b2 MANIFEST.SKIP
-SHA1 8f5c85ceff21ba940d1a7a044e8ee76aa62de92a META.yml
-SHA1 00be7d6f51f1cb4e92d7246ddd5c6d3f994f35dd Makefile.PL
+SHA1 b3e2816e10cd47106d9c0c64f9ac0d7177badcc2 Changes
+SHA1 49db05bfe67a7543a50554998a317e3ada4fbeba MANIFEST
+SHA1 e6e7c2904ea5d300c0ddf70fc5a80f5005229aa9 MANIFEST.SKIP
+SHA1 49ff58a684e0d12c25c7218297f4ea9ae88445cb META.yml
+SHA1 f380b35d798eb64684e60b1b0a99c8ecc8991145 Makefile.PL
 SHA1 aa3f5263099d3953011b7aa33fe06e36bf860fc0 README
-SHA1 549fde6b2fe1b6d1b02fca1b1a8d9ea55c7cd353 debian/changelog
+SHA1 f8d7e2cef365ef19a950c5b2f8f5e8a235b254af debian/changelog
 SHA1 ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4 debian/compat
-SHA1 6a4d361b89f5f9d96cd9c7f91fad8bcb6d6447e3 debian/control
+SHA1 f99d48f8d685af76e7e3ddd1fd88a5311d813588 debian/control
 SHA1 e79ddc7a072e8cc68a1e33e77b18ef2404bd1f95 debian/copyright
 SHA1 6604489c7bb727e788a4c5ca515dc385efaa0e89 debian/rules
 SHA1 61652cd1568dcf2614df833eba241755eee34e89 debian/source/format
 SHA1 222af98267c863b43256e7302b24c41b21d73788 debian/watch
+SHA1 2712322ca0e0e3bf466c58bc0d8e69da241e6e66 devel/child.pl
+SHA1 fa7996d08efe06275dfa2a8866e29dc1913a16d8 devel/child.pm
+SHA1 1776db18c3a0c66e4a8e9fc3d74dceb2cbe93594 devel/child.t
+SHA1 3697b93217b7a4b4e32c9fc2bf6e75157ddb922c devel/container.pm
+SHA1 9da2145f9ae9eefcf46753c777483bddf9154305 devel/goo-canvas.pl
 SHA1 5c51a7783ea2b662827c181ebab7929b4ea67d63 devel/hash-undef.pl
-SHA1 ffe300b6feb5da8d171c285f2284de90a9e7a3c1 devel/infinite-notify.pl
+SHA1 ce392cb7334fd5f410383fe373b6e1bce02a9439 devel/infinite-notify.pl
 SHA1 004de8fe24cba7b0c0238d9d2111dd26f81f092c devel/misc.pl
+SHA1 7721c9591fa7fa716838ec14e7becffa730ca5c7 devel/model_rows.pm
 SHA1 4f78b3a502b20915ba3ca3ebd35fed13d1dbb0c6 devel/proptypes.pl
 SHA1 a1bd0cd5c10d8d02030b2f30bc29e1e7fba65258 devel/read-on-signal.pl
-SHA1 ec8f9d6675adaaea63dc7d36951c4a1d1ab42cb9 devel/run.pl
+SHA1 d2899b8fa41880aeafc712cc88a70dfbb081e90c devel/run.pl
 SHA1 ee1239197538c855cb49a63cf5c278a068178144 devel/transform.pl
-SHA1 073a3847595019262031e5a33e4610bd2293e0e6 devel/unichar.pl
+SHA1 a17e2a0d236d6264949cc66630128ba6e1c88792 devel/unichar.pl
+SHA1 72cb073654e6a64d80e92a87dbabae779ce284a5 devel/widget_direction.pl
+SHA1 3dcf078a18e960964ae0a51cdcdad9faa69d7de6 devel/widget_direction.pm
+SHA1 39a63f6cc5e25f49b3f93b95069837db35b987e8 devel/widget_direction.t
+SHA1 01b7fae45972efb52826d614ea1675cc4c89adcb devel/widget_direction_loading.t
+SHA1 c860f6e87c52128ab51a419706eeb20ace1039fc devel/widget_size.pm
+SHA1 c6092612c8458681b86cd2f628f1c2867c97e83c devel/widget_size.t
 SHA1 c4f5c02f24ddece0c68aae219ac9d37da1053953 examples/func-transform.pl
 SHA1 cb62d312707f4e47ef11d09e206375a8cd25a554 examples/hash-transform.pl
 SHA1 34a002d86f3e171115862668c4100bd51ed4e0ac examples/sensitive.pl
-SHA1 3f00375a75a28eb28c9216d722220e52aec8e58d inc/MyMakeMakerExtras.pm
+SHA1 3cf3345a9177dbe362dfc8fbf192272f4a611ca8 inc/MyMakeMakerExtras.pm
 SHA1 692a1ddc2ca6b98cac7b48ea40bc1ac1509e8ed9 inc/my_pod2html
-SHA1 8e18716483793046dd7c3d850de9fd8d5df6d1b0 lib/Glib/Ex/ConnectProperties.pm
-SHA1 9127f78a0dfa04976acbb979dd7862ef59a74c58 t/0-META-read.t
-SHA1 37abd43b41068804ea4bb099fdd89af21be82926 t/0-Test-DistManifest.t
-SHA1 8f93fb4c8f0424a4442cc93c9a2e86342ef55281 t/0-Test-Pod.t
-SHA1 1de8f07883f6bf1a2ef79f2cb8adf1deb3f61cee t/0-Test-Synopsis.t
-SHA1 fb517c2fae5ddac559318bf6a224949115ea3129 t/0-Test-YAML-Meta.t
-SHA1 3491a9721500e15c2addfcc9eefbb758bc6c1593 t/ConnectProperties.t
-SHA1 ad6f4d6073275738830cf1597d6aa5e50e8dc6b6 t/Gtk2-display.t
-SHA1 95106cb21e58118b7e77f14c7e87577f0a7c196f t/Gtk2.t
-SHA1 b98ec63aaa140101fe850d117c483d88b25a32a9 t/MyTestHelpers.pm
-SHA1 46b97d752599bf4bc842693cbc0d98c1104f1dbd t/POSIX.t
-SHA1 e49126634049f7ad8184276c17858f5fda842810 t/test-weaken.t
+SHA1 1c3188e3dfbff74f4ca46f995d60c1ea8517f4b7 lib/Glib/Ex/ConnectProperties.pm
+SHA1 fa12102d755ca69458cf1478df8b9f7117319194 lib/Glib/Ex/ConnectProperties/Element.pm
+SHA1 bf76a3f805b5296f7555ea27e4c6cd144f76947f lib/Glib/Ex/ConnectProperties/Element/object.pm
+SHA1 8bef414d3fc6a44837fa1cfaba7d2b6f51f270ad t/ConnectProperties.t
+SHA1 a4a54e93c7e6fd109c56d5f8fcf2e39aae0023c0 t/Gtk2-display.t
+SHA1 9b91ddd4c811e24c8ae044d78b4f366806b556c0 t/Gtk2.t
+SHA1 5e5680b471811244fe93571efc23e7b6089cac3b t/MyTestHelpers.pm
+SHA1 0400efa28fa18cb46201acf0f183d0cbdc70aa6f t/POSIX.t
+SHA1 a4cec9f660926fec13beb74fc508e27232251123 t/test-weaken.t
+SHA1 9127f78a0dfa04976acbb979dd7862ef59a74c58 xt/0-META-read.t
+SHA1 37abd43b41068804ea4bb099fdd89af21be82926 xt/0-Test-DistManifest.t
+SHA1 8f93fb4c8f0424a4442cc93c9a2e86342ef55281 xt/0-Test-Pod.t
+SHA1 1de8f07883f6bf1a2ef79f2cb8adf1deb3f61cee xt/0-Test-Synopsis.t
+SHA1 fb517c2fae5ddac559318bf6a224949115ea3129 xt/0-Test-YAML-Meta.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iD8DBQFMZd5RLFMCIV9q3ToRAnNHAKCLRAuMUYmCwOgK6eZCxRY0QbF+HgCeJNBb
-fFSL01Hl48GlehVfNuPsUWM=
-=WmRX
+iD8DBQFMmAOoLFMCIV9q3ToRAp2QAJ9HRlZcHnB+4g4fmyXlv9rxvJ6aUwCgurA5
+POfuTylG/2+euqlfkEUZoRs=
+=lrb+
 -----END PGP SIGNATURE-----

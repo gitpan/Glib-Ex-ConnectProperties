@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Gtk2-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
-
+use 5.008;
 use strict;
 use warnings;
 use POSIX ();

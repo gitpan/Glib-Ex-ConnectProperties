@@ -18,28 +18,32 @@
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-package Foo;
+use 5.008;
 use strict;
 use warnings;
-use Glib;
-use Glib::Object::Subclass
-  Glib::Object::,
-  properties => [Glib::ParamSpec->unichar
-                 ('mychar',
-                  'mychar',
-                  'Blurb.',
-                  'x',
-                  Glib::G_PARAM_READWRITE)
-                ];
 
-sub GET_PROPERTY {
-  my ($self, $pspec) = @_;
-  return ($self->{'mychar'} || 65);
-}
+{
+  package Foo;
+  use Glib;
+  use Glib::Object::Subclass
+    'Glib::Object',
+      properties => [Glib::ParamSpec->unichar
+                     ('mychar',
+                      'mychar',
+                      'Blurb.',
+                      'x',
+                      Glib::G_PARAM_READWRITE)
+                    ];
 
-sub SET_PROPERTY {
-  my ($self, $pspec, $newval) = @_;
-  $self->{'mychar'} = $newval;
+  sub GET_PROPERTY {
+    my ($self, $pspec) = @_;
+    return ($self->{'mychar'} || 65);
+  }
+
+  sub SET_PROPERTY {
+    my ($self, $pspec, $newval) = @_;
+    $self->{'mychar'} = $newval;
+  }
 }
 
 use strict;

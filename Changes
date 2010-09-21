@@ -17,6 +17,9 @@ with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
+Version 10, September 2010
+    - new dynamic() connection style
+
 Version 9, August 2010
     - tests fix to avoid signal ID warnings on Glib 2.4.1
 

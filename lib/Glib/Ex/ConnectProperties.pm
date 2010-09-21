@@ -21,45 +21,69 @@ use strict;
 use warnings;
 use Carp;
 use Glib;
-use List::Util;
 use Scalar::Util;
+use Module::Load;
+use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 9;
+our $VERSION = 10;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
-
-# For a readable property the $object signal connection has a hard ref to
-# $elem, and $elem has a hard ref to $self, so $elem is kept alive while the
-# object lives.  The entry for $elem within $self->{'array'} is weak so that
-# $elem goes away when the object is destroyed.
+# Hard/weak refs are as follows.
 #
-# For a write-only property there's no signal connection, and $self has a
-# hard ref to the $elem, with nothing from $elem back to $self.  The
-# write-onlys don't keep $self alive, only the readables.  Once the last
-# readable object is destroyed the $self and write-onlys are destroyed.
+# * Readable property in new() permanent linkage -- the $object signal
+#   connection has a hard ref to $elem, and $elem->{'self'} has a hard ref
+#   to $self, so $elem is kept alive while $object lives.  The entry for
+#   $elem within connp $self->{'array'} is weak so that $elem goes away when
+#   $object is destroyed.
 #
-# In both cases $elem has only a weak ref to the target $object so a
-# ConnectProperties never keeps a target object alive.
+# * Readable property in dynamic() linkage -- $elem->{'self'} is weak, which
+#   means $self can be garbage collected.  Each $elem is still kept alive by
+#   the signal connection, but $self->DESTROY drops those connections.
+#
+# * Write-only property -- there's no signal connection, and $self has a
+#   hard ref to $elem, with nothing from $elem back to $self.  The
+#   write-onlys don't keep $self alive, only the readables.  Once the last
+#   readable object is destroyed the $self and write-onlys are destroyed.
+#
+# In all cases $elem->{'object'} is only a weak ref to the target $object so
+# a ConnectProperties never keeps a target object alive.
+#
+# When $self->{'array'} gets down to just one element (one readable one)
+# it'd be possible to discard it as there's nowhere for its "notify" to
+# propagate values to.  But maybe an add() could be made to extend an
+# existing linkage, in which case would still want that last element.  Maybe
+# could go dynamic() style when down to one element, so if nothing else
+# cares about the linkage then destroy the lot.
 #
 
 sub new {
   my ($class, @array) = @_;
   if (@array < 2) {
-    croak 'Glib::Ex::ConnectProperties->new(): must have two or more object/property pairs';
+    croak 'ConnectProperties: new() must have two or more object/property pairs';
   }
 
   # validate property names before making signal connections
   foreach my $elem (@array) {
     my ($object, $pname, @params) = @$elem;
-    $object->find_property ($pname)
-      or croak "ConnectProperties: $object has no property '$pname'";
+
+    my $flavour;
+    if ($pname =~ /(.*?):(.*)/) {
+      $pname = $2;
+      ($flavour = $1) =~ tr/-/_/;
+    } else {
+      $flavour = 'object';
+    }
+    my $elem_class = "Glib::Ex::ConnectProperties::Element::$flavour";
+    ### $elem_class
+    Module::Load::load ($elem_class);
 
     # replacing element in @array
-    $elem = { object => $object,
-              pname  => $pname,
-              @params };
+    $elem = $elem_class->new (object => $object,
+                              pname  => $pname,
+                              @params);
+    $elem->check_property;
   }
   my $self = bless { array => \@array }, $class;
   my $first_readable_elem;
@@ -79,17 +103,17 @@ sub new {
     }
 
     my $object = $elem->{'object'};
-    my $pname  = $elem->{'pname'};
     Scalar::Util::weaken ($elem->{'object'});
 
-    my $pspec = $object->find_property ($pname);
-    if (! delete $elem->{'write_only'}
-        && $pspec->get_flags & 'readable') {
+    if (! delete $elem->{'write_only'} && $elem->is_readable) {
       $first_readable_elem ||= $elem;
       $elem->{'self'} = $self;
-      $elem->{'signal_id'} = $object->signal_connect
-        (delete $elem->{'read_signal'} || "notify::$pname",
-         \&_do_read_handler, $elem);
+      my $ids = $elem->{'ids'} = Glib::Ex::SignalIds->new ($object);
+      foreach my $signame (delete $elem->{'read_signal'}
+                           || $elem->read_signal) {
+        ### $signame
+        $ids->add ($object->signal_connect ($signame, \&_do_read_handler, $elem));
+      }
       Scalar::Util::weaken ($elem);  # the element of $self->{'array'}
     }
   }
@@ -101,51 +125,46 @@ sub new {
   return $self;
 }
 
+sub dynamic {
+  my $self = shift->new(@_);
+  foreach my $elem (@{$self->{'array'}}) {
+    Scalar::Util::weaken ($elem->{'self'});
+  }
+  return $self;
+}
+
+# For a permanent new() style connection DESTROY is only reached when all
+# readable objects are gone already, so there's nothing to disconnect.  But
+# a dynamic() is garbage collected with signal connections still present,
+# hence an explicit disconnect() here.
 #
-# No DESTROY method.  No need to disconnect notify signals in DESTROY
-# because each signal callback has a strong reference to the
-# ConnectProperties object, meaning the only time a ConnectProperties is
-# destroyed is when all the linked objects are destroyed, which means all
-# the signals have been disconnected already.
-#
+sub DESTROY {
+  my ($self) = @_;
+  $self->disconnect;
+}
 
 sub disconnect {
   my ($self) = @_;
   my $array = $self->{'array'};
   ### ConnectProperties disconnect: "$self ".scalar(@$array)." elems"
-
   while (my $elem = pop @$array) {
-    my $object = $elem->{'object'} || next; # if not gone due to weakening
-    ###   object: "$object id ".($elem->{'signal_id'}||'undef')
-
-    my $id = $elem->{'signal_id'};
-    if (! $id) { next; } # no connection on write-only properties
-
-    # guard against already disconnected during perl "global destruction",
-    # signal_handler_disconnect() will print an unsightly g_warn() if $id is
-    # already gone
-    if ($object->signal_handler_is_connected ($id)) {
-      $object->signal_handler_disconnect ($id);
-    }
+    delete $elem->{'ids'};
   }
 }
 
 # 'notify' or read_signal handler from a connected object
 sub _do_read_handler {
-  my $from_object = $_[0];
   my $from_elem = $_[-1];
   my $self = $from_elem->{'self'};
 
-  ### ConnectProperties _do_read_handler: "$self $from_object/$from_elem->{'pname'}"
-  ###   value: $from_object->get_property ($from_elem->{'pname'})
+  ### ConnectProperties _do_read_handler: "$self $_[0]/" . ($from_elem->{'pname'} || '[false]')
   ###   notify_in_progress: $self->{'notify_in_progress'}
 
   if ($self->{'notify_in_progress'}) { return; }
   local $self->{'notify_in_progress'} = 1;
 
-  my $from_pname = $from_elem->{'pname'};
-  my $from_val = $from_object->get_property ($from_pname);
-  ###   propagate value: $from_val
+  my $from_val = $from_elem->get_value;
+  ###   from_value to propagate: $from_val
   if (my $func = $from_elem->{'func_out'}) {
     $from_val = $func->($from_val);
     ###   func_out becomes: $from_val
@@ -158,8 +177,7 @@ sub _do_read_handler {
     unless (($to_elem = $array->[$i])
             && ($to_object = $to_elem->{'object'})) {
       ###   elem gone, dropping: $i
-      splice @$array, $i, 1;
-      $i--;
+      splice @$array, $i--, 1;
       next;
     }
     if ($to_elem == $from_elem         # not ourselves
@@ -167,8 +185,8 @@ sub _do_read_handler {
       next;
     }
 
-    my $to_pname = $to_elem->{'pname'};
-    my $to_pspec = $to_object->find_property ($to_pname);
+    my $to_pspec = $to_elem->find_property
+      || next;  # if no container child property yet, etc
     my $to_flags = $to_pspec->get_flags;
 
     # skip non-writable targets
@@ -184,21 +202,21 @@ sub _do_read_handler {
     # value_validate() is wrapped in Glib 1.220, remove the check when ready
     # to demand that version
     if (my $func = $to_pspec->can('value_validate')) {
-      (undef, $to_val) = $func->($to_pspec, $to_val);
+      (undef, $to_val) = $to_pspec->$func($to_val);
     }
 
     # skip if target already contains $to_val, to avoid extra 'notify's
     if ($to_flags & 'readable') {
-      my $old_to_val = $to_object->get_property ($to_pname);
-      if (_pspec_equal ($to_pspec, $old_to_val, $to_val)) {
-        ###   suppress already equal: "$to_object/$to_pname"
+      if (_pspec_equal ($to_pspec, $to_elem->get_value, $to_val)) {
+        ###   suppress already equal: "$to_object/".($to_elem->{'pname'} || '[false]')
         next;
       }
     }
 
-    ###   store to: "$to_object/$to_pname"
-    $to_object->set_property ($to_pname, $to_val);
+    ###   store to: "$to_object/". ($to_elem->{'pname'} || '[false]')
+    $to_elem->set_value ($to_val);
   }
+
   return $from_elem->{'read_signal_return'};
 }
 
@@ -419,8 +437,8 @@ another widget, letting the user click to hide or show it.
 
 The advantage of ConnectProperties is that it's bi-directional, so if other
 code changes "Foo/visible" then that change is sent back to
-"CheckButton/active" too, ensuring the button display is up-to-date with
-what it's controlling, no matter how the target changes.
+"CheckButton/active" too, ensuring the button display shows what it's
+controlling, no matter how the target changes.
 
 =head2 Property Types
 
@@ -431,8 +449,8 @@ L</Equality> below).
 Read-only properties can be given.  They're propagated out to the other
 linked properties but changes in those others are not stored back.  This can
 leave different values, which rather defeats the purpose of the linkage.
-Linking a read-only probably only makes sense if the read-only one is the
-only one changing.  See the C<read_only> option below to force read-only.
+Linking a read-only probably only makes sense if that read-only is the only
+one changing.  See the C<read_only> option below to force read-only.
 
 Write-only properties can be given.  Nothing is read out of them, they're
 just set from changes in the other linked properties.  Write-only properties
@@ -440,41 +458,73 @@ are often pseudo "add" methods etc, so it's a little unlikely linking a
 write-only will be wanted.  See the C<write_only> option below to force
 write-only.
 
-It works to connect two properties on the same object and this can ensure
-they update together.  It also works to have two different ConnectProperties
-with an object/property in common, a change coming from one group propagates
+It works to connect two properties on the same object.  This can ensure they
+update together.  It also works to have two different ConnectProperties with
+an object/property in common.  A change coming from one group propagates
 through to the other.  Such a setup arises quite naturally if you've got two
 controls for the same target; neither needs to know the other exists.
 
 =head1 FUNCTIONS
 
+=head2 Creation
+
 =over 4
 
 =item C<< $conn = Glib::Ex::ConnectProperties->new ([$obj1,$pname1], [$obj,$pname2], ...) >>
 
-Connect two or more given object+property combinations.  Each argument is an
-arrayref with an object, a property name, and possible further options
-described below.  For example
-
-    $conn = Glib::Ex::ConnectProperties->new
-                ([$aa_object, 'one-prop'],
-                 [$bb_object, 'another-prop']);
+Connect two or more given object+property combinations.  The connection
+lasts for as long as the objects do.
 
 The return value is a Perl object of type C<Glib::Ex::ConnectProperties>.
-You can keep that to later break the connection explicitly using
-C<disconnect> below, otherwise ignore it.
+It can be kept to later break the connection with C<disconnect> below,
+otherwise it can be ignored.
+
+=item C<< $conn = Glib::Ex::ConnectProperties->dynamic ([$obj1,$pname1], [$obj,$pname2], ...) >>
+
+Connect two or more given object+property combinations.  The return is a
+Perl object of type C<Glib::Ex::ConnectProperties>.  The connection lasts
+only as long as you keep that returned object.
+
+=back
+
+The arguments to both functions are arrayrefs with an object, a property
+name, and possible further options described below.  For example
+
+    Glib::Ex::ConnectProperties->new
+      ([$aa_object, 'one-prop'],
+       [$bb_object, 'another-prop']);
 
 An initial value is propagated from the first object+property (the first
 readable one) to set all the others in case they're not already the same.
 So put the object with the desired initial value first.
 
-A ConnectProperties linkage lasts as long as the linked objects exist.  It
-only keeps weak references to those objects, so the linkage doesn't prevent
-some or all of them being garbage collected.
+A ConnectProperties only keeps weak references to the objects, so the
+linkage doesn't prevent some or all of them being garbage collected.
+
+The C<new> is a permanent linkage for the given objects.  A C<dynamic> can
+be used if a linkage is only wanted for a certain time, or if the target
+objects to link might change and you should drop the old linkage and make a
+new one.  For example something like the following in a widget or object
+allowing a target to be changed, including to C<undef> for no linkage.
+
+    sub set_target {
+      my ($self, $target_object) = @_;
+      $self->{'conn'} =
+        $target_object && Glib::Ex::ConnectProperties->new
+                            ([$self,   'my-prop'],
+                             [$target, 'target-prop']);
+    }
+
+=head2 Operations
+
+=over
 
 =item C<< $conn->disconnect() >>
 
 Disconnect the given ConnectProperties linkage.
+
+This can be linkages made by both the C<new> and C<dynamic> above.
+A dynamic one is disconnected automatically when garbage collected.
 
 =back
 
@@ -626,7 +676,7 @@ If already right then the C<set> call is not made at all.
 =back
 
 The in-progress flag acts against immediate further C<notify>s.  This could
-be done by temporarily disconnecting or blocking the handlers too, but that
+be done by temporarily disconnecting or blocking the handlers, but that
 seems more work than ignoring.
 
 The compare-before-set copes with C<freeze_notify> because in that case the
@@ -635,24 +685,24 @@ perhaps a long time later.
 
 If the C<func_in> / C<func_out> transformations are inconsistent, so that a
 value going in is always different from what comes out, then usually the "in
-progress" case prevents an infinite loop, so long as the program eventually
+progress" case prevents an infinite loop, as long as the program eventually
 reaches a state with no C<freeze_notify> in force.
 
 It might be wondered if something simpler is possible.  For the general case
-alas no, not really.  The specific C<set_foo> methods on most widgets and
-objects will often notice an unchanged setting and do nothing, but when
-using the generic C<set_property> the protection above is needed.
+no, not really.  The specific C<set_foo> methods on most widgets and objects
+often notice an unchanged setting and do nothing, but when using the generic
+C<set_property> the protection above is needed.
 
 =head2 Equality
 
 An existing value and prospective new value are compared using C<values_cmp>
 in Glib-Perl 1.220 or a fallback otherwise.  For example in
-C<Glib::Param::Double> properties anything within "epsilon" (1e-90 by
-default) is close enough.  C<values_cmp> lets ParamSpec subclasses control
-what they consider equal.
+C<Glib::Param::Double> anything within "epsilon" (1e-90 by default) is close
+enough.  C<values_cmp> lets ParamSpec subclasses control what they consider
+equal.
 
 The core C<Glib::Param::Boxed> only compares by pointer value, which is
-fairly useless because boxed objects are frequently copied so you probably
+fairly useless since boxed objects are frequently copied so you probably
 don't have an identical pointer.  ConnectProperties tries to improve this
 by:
 
@@ -688,14 +738,15 @@ C<Glib::Param::Object> pspecs could perhaps benefit from using an C<equal>
 or C<compare> method on the value type the same as for boxed objects.  But
 usually when setting a C<Glib::Object> it's a particular object which is
 desired, not just contents.  If that's not so then as with C<Glib::Scalar>
-it may be better as a C<values_cmp> in a ParamSpec subclass expressing which
-different objects are equal enough (which, if/when possible, would express
-that to both C and Perl code).
+it may be handled by a ParamSpec subclass with a C<values_cmp> to express
+when different objects are equal enough (which, if/when possible, would work
+for both C code and Perl code comparing).
 
 =head2 Notifies
 
-If you're writing an object or widget don't forget to explicitly C<notify>
-when changing a property outside of C<SET_PROPERTY>.  For example,
+If you're writing an object or widget (per L<Glib::Object:Subclass>) don't
+forget to explicitly C<notify> when changing a property outside of
+C<SET_PROPERTY>.  For example,
 
     sub set_foo {
       my ($self, $newval) = @_;
@@ -705,15 +756,16 @@ when changing a property outside of C<SET_PROPERTY>.  For example,
       }
     }
 
-This sort of thing is required for any object or widget, but failing to do
-so will in particular mean ConnectProperties doesn't work.  C<SET_PROPERTY>
-can call out to a setter function like this to re-use code.  In that case
-the extra C<notify> call is harmless and Glib collapses it to just one
-notify at the end of C<SET_PROPERTY>.
+This sort of thing is wanted in any object or widget, but failing to do so
+will in particular mean ConnectProperties doesn't work.  C<SET_PROPERTY> can
+call out to a setter function like this to re-use code.  In that case the
+extra C<notify> call is harmless and Glib collapses it to just one notify at
+the end of C<SET_PROPERTY>.
 
 =head1 SEE ALSO
 
-L<Glib::Object>
+L<Glib::Object>,
+L<Glib::ParamSpec>
 
 =head1 HOME PAGE
 
@@ -737,3 +789,69 @@ You should have received a copy of the GNU General Public License along with
 Glib-Ex-ConnectProperties.  If not, see L<http://www.gnu.org/licenses/>.
 
 =cut
+
+
+# =head1 OTHER PROPERTIES
+# 
+# =head2 Child Properties
+# 
+# C<Gtk2::Container> defines certain "child properties" associated with each
+# widget child.  For example C<Gtk2::Table> uses these for the attach
+# positions of each of its children.  These are separate from a widget's
+# normal object properties.
+# 
+# Child properties can be accessed from ConnectProperties in Gtk2-Perl 1.240
+# under a property name like "child:x".
+# 
+#     Glib::Ex::ConnectProperties->new
+#       ([$subwidget, 'child:top-attach'],
+#        [$label, 'text']);
+# 
+# =head2 Widget Allocated Size
+# 
+# The widget allocated width and height per C<< $widget->allocation >> can be
+# accessed from ConnectProperties as
+# 
+#     widget:allocation:width       integer, read-only
+#     widget:allocation:height      integer, read-only
+# 
+# The size is read-only, but might be connected up to display somewhere,
+# 
+#     Glib::Ex::ConnectProperties->new
+#       ([$toplevel, 'widget:allocation:width'],
+#        [$label, 'label']);
+# 
+# Or the size of one widget could be connected to the C<width-request> and
+# C<height-request> of another widget so as to make it the same size,
+# depending what its container parent will allow.
+# 
+# =head2 Widget Text Direction
+# 
+# The C<Gtk2::Widget> text direction C<ltr> or C<rtl> can be accessed from
+# ConnectProperties with
+# 
+#     widget:direction     enum Gtk2::TextDirection
+# 
+# It corresponds to the widget C<get_direction> and C<set_direction> methods
+# and might for instance keep the direction the same in a set of widgets.
+# 
+#     Glib::Ex::ConnectProperties->new
+#       ([$label1, 'widget:direction'],
+#        [$label2, 'widget:direction']);
+# 
+# =head2 Tree Model Rows
+# 
+# The existence of rows in a C<Gtk2::TreeModel> can be accessed with
+# 
+#     treemodel:empty            boolean, read-only
+#     treemodel:non-empty        boolean, read-only
+#     treemodel:count-rows       integer, read-only
+#     treemodel:count-top-rows   integer, read-only
+# 
+# These are all read-only, so cannot change the model's contents, but might
+# for instance be connected up to make a control widget sensitive only when a
+# model has some rows.
+# 
+#     Glib::Ex::ConnectProperties->new
+#       ([$model, 'treemodel:non-empty'],
+#        [$button, 'sensitive']);

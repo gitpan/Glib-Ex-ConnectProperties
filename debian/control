@@ -32,7 +32,7 @@ Bugs: mailto:user42@zip.com.au
 
 Package: libglib-ex-connectproperties-perl
 Architecture: all
-Depends: perl (>= 5.8), libglib-perl, ${perl:Depends}, ${misc:Depends}
+Depends: perl (>= 5.8), libglib-perl, libglib-ex-objectbits-perl (>= 5), libmodule-load-perl | perl (>= 5.10.0), ${perl:Depends}, ${misc:Depends}
 Description: link properties between objects in Glib-Perl
  Glib::Ex::ConnectProperties establishes a link between properties on
  different objects, so a change to any one of them is propagated to

@@ -17,9 +17,10 @@
 # You should have received a copy of the GNU General Public License along
 # with Gtk2-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
+use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 116;
+use Test::More tests => 121;
 
 use lib 't';
 use MyTestHelpers;
@@ -27,7 +28,7 @@ BEGIN { MyTestHelpers::nowarnings() }
 
 require Glib::Ex::ConnectProperties;
 
-my $want_version = 9;
+my $want_version = 10;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');
@@ -48,56 +49,54 @@ MyTestHelpers::glib_gtk_versions();
 
 
 #-----------------------------------------------------------------------------
-package Foo;
-use strict;
-use warnings;
-use Glib;
-use Glib::Object::Subclass
-  'Glib::Object',
-  signals => { 'my-sig' => { return_type => 'Glib::String',
-                             flags       => ['run-last'],
-                             param_types => ['Glib::String','Glib::String'],
-                           }
-             },
-  properties => [Glib::ParamSpec->boolean
-                 ('myprop-one',
-                  'myprop-one',
-                  'Blurb.',
-                  0,
-                  Glib::G_PARAM_READWRITE),
+{
+  package Foo;
+  use strict;
+  use warnings;
+  use Glib;
+  use Glib::Object::Subclass
+    'Glib::Object',
+      signals => { 'my-sig' => { return_type => 'Glib::String',
+                                 flags       => ['run-last'],
+                                 param_types => ['Glib::String','Glib::String'],
+                               },
+                 },
+                   properties => [Glib::ParamSpec->boolean
+                                  ('myprop-one',
+                                   'myprop-one',
+                                   'Blurb.',
+                                   0,
+                                   Glib::G_PARAM_READWRITE),
 
-                 Glib::ParamSpec->boolean
-                 ('myprop-two',
-                  'myprop-two',
-                  'Blurb.',
-                  0,
-                  Glib::G_PARAM_READWRITE),
+                                  Glib::ParamSpec->boolean
+                                  ('myprop-two',
+                                   'myprop-two',
+                                   'Blurb.',
+                                   0,
+                                   Glib::G_PARAM_READWRITE),
 
-                 Glib::ParamSpec->double
-                 ('writeonly-double',
-                  'writeonly-double',
-                  'Blurb.',
-                  -1000, 1000, 111,
-                  ['writable']),
+                                  Glib::ParamSpec->double
+                                  ('writeonly-double',
+                                   'writeonly-double',
+                                   'Blurb.',
+                                   -1000, 1000, 111,
+                                   ['writable']),
 
-                 Glib::ParamSpec->float
-                 ('readonly-float',
-                  'readonly-float',
-                  'Blurb.',
-                  -2000, 2000, 222,
-                  ['readable']),
+                                  Glib::ParamSpec->float
+                                  ('readonly-float',
+                                   'readonly-float',
+                                   'Blurb.',
+                                   -2000, 2000, 222,
+                                   ['readable']),
 
-                 Glib::ParamSpec->string
-                 ('mystring',
-                  'mystring',
-                  'Blurb.',
-                  '', # default
-                  Glib::G_PARAM_READWRITE),
-                ];
-
-package main;
-use strict;
-use warnings;
+                                  Glib::ParamSpec->string
+                                  ('mystring',
+                                   'mystring',
+                                   'Blurb.',
+                                   '', # default
+                                   Glib::G_PARAM_READWRITE),
+                                 ];
+}
 
 #-----------------------------------------------------------------------------
 # values_cmp
@@ -273,6 +272,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
   my $conn = Glib::Ex::ConnectProperties->new ([$obj1,'myprop-one'],
                                                [$obj2,'myprop-two']);
+  isa_ok ($conn, 'Glib::Ex::ConnectProperties');
 
   is ($conn->VERSION, $want_version, 'VERSION object method');
   { ok (eval { $conn->VERSION($want_version); 1 },
@@ -305,17 +305,33 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
+# dynamic ()
+
+{
+  my $obj1 = Foo->new (myprop_one => 1);
+  my $obj2 = Foo->new (myprop_one => 0);
+  my $conn = Glib::Ex::ConnectProperties->dynamic ([$obj1,'myprop-one'],
+                                                   [$obj2,'myprop-one']);
+  isa_ok ($conn, 'Glib::Ex::ConnectProperties');
+  require Scalar::Util;
+  Scalar::Util::weaken ($conn);
+  is ($conn, undef, 'dynamic() gc when weakened');
+  $obj1->set (myprop_one => 0);
+  is ($obj1->get ('myprop-one'), 0);
+  is ($obj2->get ('myprop-one'), 1, 'dynamic() no propagate after gc');
+}
+
+#-----------------------------------------------------------------------------
 # read_signal
 
 {
   my $obj1 = Foo->new (mystring => 'one');
   my $obj2 = Foo->new (mystring => 'two');
-  my @saw_args;
-  my $conn = Glib::Ex::ConnectProperties->new
-    ([$obj1,'mystring'],
-     [$obj2,'mystring',
-      read_signal => 'my-sig',
-      read_signal_return => 'rsigret' ]);
+  Glib::Ex::ConnectProperties->new
+      ([$obj1,'mystring'],
+       [$obj2,'mystring',
+        read_signal => 'my-sig',
+        read_signal_return => 'rsigret' ]);
   is ($obj1->get ('mystring'), 'one', 'read_signal initial obj1');
   is ($obj2->get ('mystring'), 'one', 'read_signal initial obj2');
 
@@ -335,9 +351,9 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 {
   my $obj1 = Foo->new (myprop_one => 1);
   my $obj2 = Foo->new (myprop_one => 0);
-  my $conn = Glib::Ex::ConnectProperties->new
-    ([$obj1,'myprop-one'],
-     [$obj2,'myprop-one', bool_not => 1]);
+  Glib::Ex::ConnectProperties->new
+      ([$obj1,'myprop-one'],
+       [$obj2,'myprop-one', bool_not => 1]);
 
   ok (  $obj1->get ('myprop-one'));
   ok (! $obj2->get ('myprop-one'));
@@ -356,9 +372,9 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   my $obj1 = Foo->new (myprop_one => 1);
   my $obj2 = Foo->new (myprop_one => 0);
   my @saw_args;
-  my $conn = Glib::Ex::ConnectProperties->new
-    ([$obj1,'myprop-one'],
-     [$obj2,'myprop-one', func_in => sub { @saw_args = @_; return @_ } ]);
+  Glib::Ex::ConnectProperties->new
+      ([$obj1,'myprop-one'],
+       [$obj2,'myprop-one', func_in => sub { @saw_args = @_; return @_ } ]);
   $obj1->set('myprop-one',0);
   is_deeply (\@saw_args, [0]);
 }
@@ -370,9 +386,9 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   my $obj1 = Foo->new;
   my $obj2 = Foo->new;
   my @saw_args;
-  my $conn = Glib::Ex::ConnectProperties->new
-    ([$obj1,'mystring'],
-     [$obj2,'mystring', func_out => sub { @saw_args = @_; return @_ } ]);
+  Glib::Ex::ConnectProperties->new
+      ([$obj1,'mystring'],
+       [$obj2,'mystring', func_out => sub { @saw_args = @_; return @_ } ]);
   $obj2->set('mystring','abc');
   is_deeply (\@saw_args, ['abc']);
 }
@@ -383,12 +399,11 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 {
   my $obj1 = Foo->new (mystring => 'a');
   my $obj2 = Foo->new;
-  my @saw_args;
-  my $conn = Glib::Ex::ConnectProperties->new
-    ([$obj1,'mystring'],
-     [$obj2,'mystring',
-      hash_in  => { 'a' => 'x', 'b' => 'y' },
-      hash_out => { 'x' => 'a', 'y' => 'b' } ]);
+  Glib::Ex::ConnectProperties->new
+      ([$obj1,'mystring'],
+       [$obj2,'mystring',
+        hash_in  => { 'a' => 'x', 'b' => 'y' },
+        hash_out => { 'x' => 'a', 'y' => 'b' } ]);
   is ($obj1->get('mystring'), 'a');
   is ($obj2->get('mystring'), 'x');
 
@@ -465,9 +480,9 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
   my $obj1 = Foo->new;
   my $obj2 = Foo->new;
   my $obj3 = Foo->new; $obj3->{'readonly-float'} = 999;
-  my $conn = Glib::Ex::ConnectProperties->new ([$obj1,'writeonly-double'],
-                                               [$obj2,'writeonly-double'],
-                                               [$obj3,'readonly-float']);
+  Glib::Ex::ConnectProperties->new ([$obj1,'writeonly-double'],
+                                    [$obj2,'writeonly-double'],
+                                    [$obj3,'readonly-float']);
   is ($obj1->{'writeonly_double'}, 999,
       'obj1 writeonly-double set initially');
   is ($obj2->{'writeonly_double'}, 999,
@@ -477,8 +492,8 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 {
   my $obj1 = Foo->new;
   my $obj2 = Foo->new;
-  my $conn = Glib::Ex::ConnectProperties->new ([$obj1,'writeonly-double'],
-                                               [$obj2,'readonly-float']);
+  Glib::Ex::ConnectProperties->new ([$obj1,'writeonly-double'],
+                                    [$obj2,'readonly-float']);
   $obj2->{'readonly-float'} = 999;
   $obj2->notify ('readonly-float');
   is ($obj1->{'writeonly_double'}, 999,
@@ -490,8 +505,8 @@ SKIP: {
       or skip 'due to value_validate() not available', 1;
   my $obj1 = Foo->new; $obj1->{'readonly-float'} = 1500;
   my $obj2 = Foo->new;
-  my $conn = Glib::Ex::ConnectProperties->new ([$obj1,'readonly-float'],
-                                               [$obj2,'writeonly-double']);
+  Glib::Ex::ConnectProperties->new ([$obj1,'readonly-float'],
+                                    [$obj2,'writeonly-double']);
   is ($obj2->{'writeonly_double'}, 1000,
       'obj1 writeonly-double set initially with value_validate clamp');
 }

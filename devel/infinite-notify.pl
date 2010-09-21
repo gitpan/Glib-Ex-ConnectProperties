@@ -20,24 +20,23 @@
 
 # A set from a notify going back and forwards endlessly.
 
-
-package Foo;
+use 5.008;
 use strict;
 use warnings;
-use Glib;
-use Glib::Object::Subclass
-  Glib::Object::,
-  properties => [Glib::ParamSpec->boolean
-                 ('myprop',
-                  'myprop',
-                  'Blurb.',
-                  0,
-                  Glib::G_PARAM_READWRITE)
-                ];
 
-package main;
-use strict;
-use warnings;
+{
+  package Foo;
+  use Glib;
+  use Glib::Object::Subclass
+    'Glib::Object',
+      properties => [Glib::ParamSpec->boolean
+                     ('myprop',
+                      'myprop',
+                      'Blurb.',
+                      0,
+                      Glib::G_PARAM_READWRITE)
+                    ];
+}
 
 my $f1 = Foo->new;
 my $f2 = Foo->new;
