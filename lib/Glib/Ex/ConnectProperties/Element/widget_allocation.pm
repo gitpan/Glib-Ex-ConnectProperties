@@ -16,69 +16,26 @@
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
-# widget:size:width
-# widget:size:height
-
-# widget-size:width
-# widget-size:height
-
-# widget:size-width
-# widget:size-height
-
-# wsize:width
-# wsize:height
-
-# widgetalloc:width
-# widgetalloc:height
-
-# widget-alloc:width
-# widget-alloc:height
-
-# widget:mapped
-# widget:flag:mapped
-# widget:flags:mapped
-# wflags:mapped
-# widget-flags:mapped
-# widget-direction
-# widget:direction
-
-
-# container:empty
-# container:non-empty
-# container:count-children
-#   emission hook of parent-set probably, as nothing on container itself
-
-
-
-package Glib::Ex::ConnectProperties::Element::widget_size;
+package Glib::Ex::ConnectProperties::Element::widget_allocation;
 use 5.008;
 use strict;
 use warnings;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 10;
+our $VERSION = 11;
 
 # uncomment this to run the ### lines
-use Smart::Comments;
-
-
-# my $conn = Glib::Ex::ConnectProperties->new
-#   ([$widget, 'widget-size:width' ],
-#    [$padding_spin, 'value']);
-
-# my $conn = Glib::Ex::ConnectProperties->new
-#   ([$widget, 'widget-allocation:x' ],
-#    [$padding_spin, 'value']);
+#use Smart::Comments;
 
 
 my %pspecs = do {
-  # dummy name as paramspec name cannot be empty
-  my $pspec = Glib::ParamSpec->int ('w',    # name
-                                    'w',    # name
+  # dummy names and dummy range, just want an "int" type
+  # note paramspec names cannot be empty strings
+  my $pspec = Glib::ParamSpec->int ('w-a',  # name
+                                    'w-a',  # name
                                     '',     # blurb
-                                    0,      # min
+                                    -32768, # min
                                     32767,  # max
                                     0,      # default
                                     ['readable']);
@@ -92,16 +49,17 @@ sub find_property {
   return $pspecs{$self->{'pname'}};
 }
 
-use constant read_signal => 'size-allocate';
+use constant read_signals => 'size-allocate';
 
 sub get_value {
   my ($self) = @_;
-  ### widget_size get_value(): $self->{'object'}->allocation->values
+  ### widget_allocation get_value(): $self->{'object'}->allocation->values
   my $method = $self->{'pname'};
   return $self->{'object'}->allocation->$method;
 }
+
 sub set_value {
-  die "oops, model-rows is meant to be read-only";
+  die "ConnectProperties: oops, widget-allocation is meant to be read-only";
 }
 
 1;

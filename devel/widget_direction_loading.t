@@ -27,7 +27,7 @@ use MyTestHelpers;
 BEGIN { MyTestHelpers::nowarnings() }
 
 eval { require Module::Util }
-  or plan skip_all => "due to Module:Util not available -- $@";
+  or plan skip_all => "due to Module::Util not available -- $@";
 
 Module::Util::find_installed('Gtk2')
   or plan skip_all => 'due to Gtk2 module not available';
@@ -69,7 +69,7 @@ plan tests => 1;
 
   require Glib::Ex::ConnectProperties;
   Glib::Ex::ConnectProperties->new
-      ([$foo, 'widget:direction'],
+      ([$foo, 'widget#direction'],
        [$bar, 'mystring']);
   ok(1);
 }

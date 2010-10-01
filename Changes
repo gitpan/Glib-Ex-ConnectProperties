@@ -17,6 +17,9 @@ with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
+Version 11, September 2010
+    - new widget-allocation
+
 Version 10, September 2010
     - new dynamic() connection style
 

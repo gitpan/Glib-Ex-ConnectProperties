@@ -59,7 +59,7 @@ plan tests => 23;
 
   my $drawing = Gtk2::DrawingArea->new;
   Glib::Ex::ConnectProperties->new
-      ([$drawing, 'child:x'],
+      ([$drawing, 'child#x'],
        [$foo, 'mystring']);
   is ($foo->get('mystring'), undef);
 

@@ -21,6 +21,7 @@
 # Finding out what different GParamSpec property types are used in all
 # Glib::Object types.
 
+use 5.008;
 use strict;
 use warnings;
 use Data::Dumper;
@@ -83,7 +84,7 @@ my %covered;
 my %other;
 foreach my $class (@packages) {
   if ($class =~ /::_LazyLoader$/) { next; }
-  eval { $class->find_property ('x'); }; # force load
+  eval { $class->find_property ('x'); }; # force load, maybe
   if (! $class->can('list_properties')) { next; }
 
   my @props;

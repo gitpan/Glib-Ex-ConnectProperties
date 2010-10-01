@@ -20,7 +20,7 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 121;
+use Test::More tests => 128;
 
 use lib 't';
 use MyTestHelpers;
@@ -28,7 +28,7 @@ BEGIN { MyTestHelpers::nowarnings() }
 
 require Glib::Ex::ConnectProperties;
 
-my $want_version = 10;
+my $want_version = 11;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');
@@ -47,7 +47,6 @@ MyTestHelpers::glib_gtk_versions();
 
 ## no critic (ProtectPrivateSubs)
 
-
 #-----------------------------------------------------------------------------
 {
   package Foo;
@@ -64,36 +63,43 @@ MyTestHelpers::glib_gtk_versions();
                    properties => [Glib::ParamSpec->boolean
                                   ('myprop-one',
                                    'myprop-one',
-                                   'Blurb.',
+                                   'Blurb about boolean one.',
                                    0,
                                    Glib::G_PARAM_READWRITE),
 
                                   Glib::ParamSpec->boolean
                                   ('myprop-two',
                                    'myprop-two',
-                                   'Blurb.',
+                                   'Blurb about boolean two.',
                                    0,
                                    Glib::G_PARAM_READWRITE),
 
                                   Glib::ParamSpec->double
                                   ('writeonly-double',
                                    'writeonly-double',
-                                   'Blurb.',
+                                   'Blurb about writeonly double.',
                                    -1000, 1000, 111,
                                    ['writable']),
 
                                   Glib::ParamSpec->float
                                   ('readonly-float',
                                    'readonly-float',
-                                   'Blurb.',
+                                   'Blurb about readonly float.',
                                    -2000, 2000, 222,
                                    ['readable']),
 
                                   Glib::ParamSpec->string
                                   ('mystring',
                                    'mystring',
-                                   'Blurb.',
+                                   'Blurb about string.',
                                    '', # default
+                                   Glib::G_PARAM_READWRITE),
+
+                                  Glib::ParamSpec->boxed
+                                  ('mystrv',
+                                   'mystrv',
+                                   'Blurb about strv.',
+                                   'Glib::Strv', # type
                                    Glib::G_PARAM_READWRITE),
                                  ];
 }
@@ -110,7 +116,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 
 
 #-----------------------------------------------------------------------------
-# boolean
+# _pspec_equal() -- boolean
 
 { my $pspec = Glib::ParamSpec->boolean ('foo','foo','blurb',0,['readable']);
   diag "pspec ",ref $pspec,", value_type=",$pspec->get_value_type;
@@ -135,7 +141,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# string
+# _pspec_equal() -- string
 
 { my $pspec = Glib::ParamSpec->string ('foo','foo','blurb',
                                        'default',['readable']);
@@ -150,7 +156,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# char
+# _pspec_equal() -- char
 
 { my $pspec = Glib::ParamSpec->char ('foo','foo','blurb',
                                      32,127,32,['readable']);
@@ -162,7 +168,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# int
+# _pspec_equal() -- int
 
 { my $pspec = Glib::ParamSpec->int ('foo','foo','blurb',
                                     0,100,0,['readable']);
@@ -175,7 +181,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# float
+# _pspec_equal() -- float
 
 { my $pspec = Glib::ParamSpec->float ('foo','foo','blurb',
                                       0,100,0,['readable']);
@@ -195,7 +201,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# double
+# _pspec_equal() -- double
 
 { my $pspec = Glib::ParamSpec->double ('foo','foo','blurb',
                                        0,100,0,['readable']);
@@ -215,7 +221,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# object
+# _pspec_equal() -- object
 
 { my $pspec = Glib::ParamSpec->object ('foo','foo','blurb',
                                        'Glib::Object',['readable']);
@@ -231,7 +237,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 }
 
 #-----------------------------------------------------------------------------
-# scalar
+# _pspec_equal() -- scalar
 
 { my $pspec = Glib::ParamSpec->scalar ('foo','foo','blurb',['readable']);
   diag "pspec ",ref $pspec,", value_type=",$pspec->get_value_type;
@@ -243,7 +249,7 @@ diag "have values_cmp(): ", ($have_values_cmp ? 'yes' : 'no');
 
 
 #-----------------------------------------------------------------------------
-# boxed -- strv
+# _pspec_equal() -- strv
 
 { my $pspec = Glib::ParamSpec->boxed ('foo','foo','blurb',
                                       'Glib::Strv',['readable']);
@@ -510,5 +516,32 @@ SKIP: {
   is ($obj2->{'writeonly_double'}, 1000,
       'obj1 writeonly-double set initially with value_validate clamp');
 }
+
+#-----------------------------------------------------------------------------
+# strv
+
+{
+  my $obj1 = Foo->new;
+  my $obj2 = Foo->new;
+  Glib::Ex::ConnectProperties->new ([$obj1,'mystrv'],
+                                    [$obj2,'mystrv']);
+  is_deeply ($obj1->get('mystrv'), undef);
+  $obj1->set (mystrv => ['hello', 'world']);
+  is_deeply ($obj1->get('mystrv'), ['hello', 'world']);
+  is_deeply ($obj2->get('mystrv'), ['hello', 'world']);
+}
+
+{
+  my $obj1 = Foo->new (mystrv => ['initial', 'one']);
+  my $obj2 = Foo->new (mystrv => ['blah', 'blah']);
+  Glib::Ex::ConnectProperties->new ([$obj1,'mystrv'],
+                                    [$obj2,'mystrv']);
+  is_deeply ($obj1->get('mystrv'), ['initial', 'one']);
+  is_deeply ($obj2->get('mystrv'), ['initial', 'one']);
+  $obj2->set (mystrv => ['hello', 'world']);
+  is_deeply ($obj1->get('mystrv'), ['hello', 'world']);
+  is_deeply ($obj2->get('mystrv'), ['hello', 'world']);
+}
+
 
 exit 0;

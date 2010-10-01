@@ -24,19 +24,19 @@ use Glib;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 10;
+our $VERSION = 11;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
 
-# model-rows:empty
-# model-rows:non-empty
-# model-rows:count
-# model-rows:top-count
+# model-rows#empty
+# model-rows#non-empty
+# model-rows#count
+# model-rows#top-count
 
 # my $conn = Glib::Ex::ConnectProperties->new
-#   ([$model,  'model-rows:empty' ],
+#   ([$model,  'model-rows#empty' ],
 #    [$button, 'sensitive']);
 
 
@@ -61,9 +61,57 @@ sub new {
   return $self;
 }
 
-sub read_signal {
-  my ($self) = @_;
+sub read_signals {
   return ($self->{'empty'} ? 'row-inserted' : 'row-deleted');
+}
+
+sub connect {
+  my ($self) = @_;
+  my $h = $self->{'href'} = ($model->{__PACKAGE__} ||= do {
+    my $empty = ! $self->{'object'}->get_iter_first;
+    my $href = { empty => $empty,
+                 elems => [ $self ]};
+    $href->{'signal_ids'} = Glib::Ex::SignalIds->new
+      ($model,
+       $object->signal_connect ($empty ? 'row-inserted' : 'row-deleted',
+                                \&_do_signal,
+                                $href))
+    });
+  Scalar::Util::weaken ($h->{'elems'}->[@$h] = $self);
+}
+sub _do_signal {
+  my $href = $_[-1];
+  my $signame;
+  if ($href->{'empty'}) {
+    $href->{'empty'} = 0;
+    $signame = 'row-deleted';
+  } else {
+    if ($self->{'object'}->get_iter_first) {
+      return; # still not empty
+    }
+    $self->{'empty'} = 1;
+    $signame = 'row-inserted';
+  }
+
+  my $ids = $self->{'signal_ids'};
+  $ids->disconnect;
+  $ids->add ($model->signal_connect ($signame, \&_do_signal, $href));
+
+  my $elems = $href->{'elems'};
+  for (my $i = 0; $i < @$elems; ) {
+    if (my $elem = $elems->[$i]) {
+      $elem->_signal_handler ($elem);
+      $i++
+    } else {
+      splice @$elems, $i,1;
+    }
+  }
+}
+sub DESTROY {
+  my ($self) = @_;
+  if (! @{$self->{'href'}->{'elems'}}) {
+    delete $self->{'href'}->{'signal_ids'};
+  }
 }
 
 sub signal_handler {
@@ -102,3 +150,20 @@ sub set_value {
 
 1;
 __END__
+
+# =head2 Tree Model Rows
+# 
+# The existence of rows in a C<Gtk2::TreeModel> can be accessed with
+# 
+#     treemodel#empty            boolean, read-only
+#     treemodel#non-empty        boolean, read-only
+#     treemodel#count-rows       integer, read-only
+#     treemodel#count-top-rows   integer, read-only
+# 
+# These are all read-only, so cannot change the model's contents, but might
+# for instance be connected up to make a control widget sensitive only when a
+# model has some rows.
+# 
+#     Glib::Ex::ConnectProperties->new
+#       ([$model, 'treemodel#non-empty'],
+#        [$button, 'sensitive']);

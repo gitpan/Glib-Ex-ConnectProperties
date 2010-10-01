@@ -60,7 +60,7 @@ plan tests => 6;
 
   my $label = Gtk2::Label->new;
   Glib::Ex::ConnectProperties->new
-      ([$label, 'widget:direction'],
+      ([$label, 'widget#direction'],
        [$foo,   'mystring']);
   is ($label->get_direction, $foo->get('mystring'));
 

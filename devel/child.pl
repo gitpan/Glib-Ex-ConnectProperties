@@ -53,7 +53,7 @@ my $conn = Glib::Ex::ConnectProperties->new
    [$padding_spin, 'value']);
 
 Glib::Ex::ConnectProperties->new
-  ([$label, 'child:padding' ],
+  ([$label, 'child#padding' ],
    [$label2, 'label']);
 
 {

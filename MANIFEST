@@ -20,13 +20,12 @@ devel/proptypes.pl
 devel/read-on-signal.pl
 devel/run.pl
 devel/transform.pl
+devel/type-prefix.pl
 devel/unichar.pl
 devel/widget_direction.pl
 devel/widget_direction.pm
 devel/widget_direction.t
 devel/widget_direction_loading.t
-devel/widget_size.pm
-devel/widget_size.t
 examples/func-transform.pl
 examples/hash-transform.pl
 examples/sensitive.pl
@@ -35,6 +34,7 @@ inc/MyMakeMakerExtras.pm
 lib/Glib/Ex/ConnectProperties.pm
 lib/Glib/Ex/ConnectProperties/Element.pm
 lib/Glib/Ex/ConnectProperties/Element/object.pm
+lib/Glib/Ex/ConnectProperties/Element/widget_allocation.pm
 Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
@@ -46,6 +46,7 @@ t/Gtk2.t
 t/MyTestHelpers.pm
 t/POSIX.t
 t/test-weaken.t
+t/widget_allocation.t
 xt/0-META-read.t
 xt/0-Test-DistManifest.t
 xt/0-Test-Pod.t

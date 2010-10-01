@@ -23,7 +23,7 @@ use warnings;
 use Carp;
 our @CARP_NOT = ('Glib::Ex::ConnectProperties');
 
-our $VERSION = 10;
+our $VERSION = 11;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

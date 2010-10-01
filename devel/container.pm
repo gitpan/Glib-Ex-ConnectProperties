@@ -1,3 +1,7 @@
+# no signal for child added, emission of parent-set only
+
+
+
 # Copyright 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
@@ -24,24 +28,24 @@ use Glib;
 use Scalar::Util;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 10;
+our $VERSION = 11;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
 
-# model-rows:empty
-# model-rows:non-empty
-# model-rows:count
-# model-rows:top-count
+# container-children#empty
+# container-children#non-empty
+# container-children#count
+# container-children#top-count
 
 # my $conn = Glib::Ex::ConnectProperties->new
-#   ([$menu,   'container:non-empty' ],
+#   ([$menu,   'container-children#non-empty' ],
 #    [$button, 'sensitive']);
 
 
 my %pspecs = do {
-  # dummy name as paramspec name cannot be empty
+  # dummy name as paramspec name cannot be empty string
   my $pspec = Glib::ParamSpec->boolean ('c', # name
                                         'c', # name
                                         '',  # blurb
@@ -82,7 +86,7 @@ sub DESTROY {
   }
 }
 
-use constant read_signal => ();
+use constant read_signals => ();
 
 sub _do_parent_set_emission {
   my ($invocation_hint, $param_list) = @_;
@@ -103,7 +107,7 @@ sub get_value {
   return ($self->{'empty'} ^ ($self->{'pname'} eq 'non-empty'));
 }
 sub set_value {
-  die "oops, model-rows is meant to be read-only";
+  die "oops, container-children is meant to be read-only";
 }
 
 1;

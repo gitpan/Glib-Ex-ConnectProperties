@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 10;
+our $VERSION = 11;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -41,7 +41,7 @@ sub find_property {
   return $self->{'object'}->find_property ($self->{'pname'});
 }
 
-sub read_signal {
+sub read_signals {
   my ($self) = @_;
   return 'notify::' . $self->{'pname'};
 }
