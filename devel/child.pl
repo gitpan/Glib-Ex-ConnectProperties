@@ -44,16 +44,16 @@ my $padding_spin;
 }
 
 my $label = Gtk2::Label->new ('Hello');
-$vbox->add ($label);
+$vbox->pack_start ($label, 1,1,0);
 my $label2 = Gtk2::Label->new ('');
-$vbox->pack_start ($label2, 0,0,0);
+$vbox->pack_start ($label2, 1,1,0);
 
 my $conn = Glib::Ex::ConnectProperties->new
-  ([$label, 'padding', proptype => 'child' ],
+  ([$label, 'container-child#padding' ],
    [$padding_spin, 'value']);
 
 Glib::Ex::ConnectProperties->new
-  ([$label, 'child#padding' ],
+  ([$label, 'container-child#padding' ],
    [$label2, 'label']);
 
 {

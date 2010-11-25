@@ -8,10 +8,11 @@ debian/rules
 debian/source/format
 debian/watch
 devel/child.pl
-devel/child.pm
-devel/child.t
 devel/container.pm
-devel/goo-canvas.pl
+devel/container_child.pm
+devel/dialog_set_response_sensitive.pm
+devel/goo-child.pl
+devel/goo-child.pm
 devel/hash-undef.pl
 devel/infinite-notify.pl
 devel/misc.pl
@@ -22,10 +23,14 @@ devel/run.pl
 devel/transform.pl
 devel/type-prefix.pl
 devel/unichar.pl
+devel/value-validate-boxed.pl
+devel/widget.pm
 devel/widget_direction.pl
 devel/widget_direction.pm
 devel/widget_direction.t
 devel/widget_direction_loading.t
+devel/widget_toplevel.pl
+devel/widget_toplevel.pm
 examples/func-transform.pl
 examples/hash-transform.pl
 examples/sensitive.pl
@@ -41,6 +46,7 @@ MANIFEST.SKIP
 README
 SIGNATURE
 t/ConnectProperties.t
+t/container_child.t
 t/Gtk2-display.t
 t/Gtk2.t
 t/MyTestHelpers.pm

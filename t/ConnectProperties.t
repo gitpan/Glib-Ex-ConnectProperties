@@ -28,7 +28,9 @@ BEGIN { MyTestHelpers::nowarnings() }
 
 require Glib::Ex::ConnectProperties;
 
-my $want_version = 11;
+#-----------------------------------------------------------------------------
+# VERSION
+my $want_version = 12;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');
@@ -41,6 +43,8 @@ my $want_version = 11;
   ok (! eval { Glib::Ex::ConnectProperties->VERSION($check_version); 1 },
       "VERSION class check $check_version");
 }
+
+#-----------------------------------------------------------------------------
 
 require Glib;
 MyTestHelpers::glib_gtk_versions();

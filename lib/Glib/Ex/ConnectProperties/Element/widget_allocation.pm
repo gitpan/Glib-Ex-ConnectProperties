@@ -23,7 +23,7 @@ use warnings;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 11;
+our $VERSION = 12;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -32,8 +32,10 @@ our $VERSION = 11;
 my %pspecs = do {
   # dummy names and dummy range, just want an "int" type
   # note paramspec names cannot be empty strings
+  # width/height min is actually 1, but that that doesn't matter as it's
+  # read-only
   my $pspec = Glib::ParamSpec->int ('w-a',  # name
-                                    'w-a',  # name
+                                    'w-a',  # nick
                                     '',     # blurb
                                     -32768, # min
                                     32767,  # max
@@ -42,7 +44,13 @@ my %pspecs = do {
   (x      => $pspec,
    y      => $pspec,
    width  => $pspec,
-   height => $pspec)
+   height => $pspec,
+   rectangle => Glib::ParamSpec->boxed ('rectangle',  # name
+                                        'Rectangle',  # nick
+                                        '',           # blurb
+                                        'Gtk2::Gdk::Rectangle',
+                                        ['readable']),
+  )
 };
 sub find_property {
   my ($self) = @_;
@@ -53,9 +61,14 @@ use constant read_signals => 'size-allocate';
 
 sub get_value {
   my ($self) = @_;
-  ### widget_allocation get_value(): $self->{'object'}->allocation->values
-  my $method = $self->{'pname'};
-  return $self->{'object'}->allocation->$method;
+  ### widget_allocation get_value()
+  my $pname = $self->{'pname'};
+  my $rect = $self->{'object'}->allocation;
+  ### rect: $rect->values
+  if ($pname eq 'rectangle') {
+    return $rect->copy;
+  }
+  return $rect->$pname;
 }
 
 sub set_value {

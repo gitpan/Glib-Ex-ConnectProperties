@@ -23,7 +23,7 @@ use warnings;
 use Glib::Ex::ConnectProperties;
 use Gtk2 '-init';
 use Gtk2;
-use App::MathImage::Gtk2::Ex::ComboBox::EnumValues;
+use Gtk2::Ex::ComboBox::Enum;
 
 my $read_signal = 'direction-changed';
 my $get_method = 'get_direction';
@@ -53,7 +53,7 @@ $toplevel->signal_connect (destroy => sub { Gtk2->main_quit });
 my $vbox = Gtk2::VBox->new (0,0);
 $toplevel->add ($vbox);
 
-my $dir_combo = App::MathImage::Gtk2::Ex::ComboBox::EnumValues->new
+my $dir_combo = Gtk2::Ex::ComboBox::Enum->new
   (enum_type => 'Gtk2::TextDirection');
 $vbox->pack_start ($dir_combo, 1,1,0);
 
@@ -64,7 +64,7 @@ my $label2 = Gtk2::Label->new ('');
 $vbox->pack_start ($label2, 0,0,0);
 
 my $conn = Glib::Ex::ConnectProperties->new
-  ([$label, undef,
+  ([$label, 'parent',  # widget-direction#dir
     read_signal => 'direction-changed',
     get_method  => $get_method,
     set_method  => $set_method,
@@ -73,7 +73,7 @@ my $conn = Glib::Ex::ConnectProperties->new
    [$dir_combo, 'active-nick']);
 
 # Glib::Ex::ConnectProperties->new
-#   ([$label, undef, proptype => 'widget-direction' ],
+#   ([$label, 'widget-direction#dir'' ],
 #    [$label2, 'label']);
 
 {

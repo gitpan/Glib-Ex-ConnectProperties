@@ -28,6 +28,9 @@ use lib 't';
 use MyTestHelpers;
 # BEGIN { MyTestHelpers::nowarnings() }
 
+# uncomment this to run the ### lines
+#use Smart::Comments;
+
 BEGIN {
   eval { require Gtk2 }
     or plan skip_all => "due to Gtk2 module not available -- $@";
@@ -36,7 +39,7 @@ BEGIN {
   MyTestHelpers::glib_gtk_versions();
 }
 
-plan tests => 14;
+plan tests => 22;
 
 
 {
@@ -53,6 +56,27 @@ plan tests => 14;
                       '', # default
                       Glib::G_PARAM_READWRITE),
                     ];
+}
+{
+  package Bar;
+  use strict;
+  use warnings;
+  use Glib;
+  use Glib::Object::Subclass
+    'Glib::Object',
+      properties => [Glib::ParamSpec->boxed
+                     ('myrect',
+                      'myrect',
+                      'Blurb.',
+                      'Gtk2::Gdk::Rectangle',
+                      Glib::G_PARAM_READWRITE),
+                    ];
+  sub SET_PROPERTY {
+    my ($self, $pspec, $newval) = @_;
+    ### Bar SET_PROPERTY: $newval
+    ### values: $newval && $newval->values
+    $self->{'myrect'} = ($newval && $newval->copy);
+  }
 }
 
 #-----------------------------------------------------------------------------
@@ -81,11 +105,13 @@ plan tests => 14;
 
   ok ($size_allocate_ran, 'draw size-allocate signal runs');
   #   diag $draw->size_request->width;
+  ### draw allocation: $draw->allocation->values
 
   my $foo_width  = Foo->new;
   my $foo_height = Foo->new;
   my $foo_x      = Foo->new;
   my $foo_y      = Foo->new;
+  my $bar        = Bar->new;
   Glib::Ex::ConnectProperties->new ([$draw,'widget-allocation#width'],
                                     [$foo_width,'mystring']);
   Glib::Ex::ConnectProperties->new ([$draw,'widget-allocation#height'],
@@ -94,10 +120,19 @@ plan tests => 14;
                                     [$foo_x,'mystring']);
   Glib::Ex::ConnectProperties->new ([$draw,'widget-allocation#y'],
                                     [$foo_y,'mystring']);
+  Glib::Ex::ConnectProperties->new ([$draw,'widget-allocation#rectangle'],
+                                    [$bar,'myrect']);
   is ($foo_width->get('mystring'), 2000);
   is ($foo_height->get('mystring'), 1000);
   is ($foo_x->get('mystring'), 20);
   is ($foo_y->get('mystring'), 10);
+  {
+    my $rect = $bar->get('myrect');
+    is ($rect && $rect->width, 2000);
+    is ($rect && $rect->height, 1000);
+    is ($rect && $rect->x, 20);
+    is ($rect && $rect->y, 10);
+  }
 
   $draw->set_size_request (500, 300);
   # must loop for $fixed to act on queued resize
@@ -107,7 +142,13 @@ plan tests => 14;
   is ($foo_height->get('mystring'), 300);
   is ($foo_x->get('mystring'), 20);
   is ($foo_y->get('mystring'), 10);
-
+  {
+    my $rect = $bar->get('myrect');
+    is ($rect && $rect->width, 500);
+    is ($rect && $rect->height, 300);
+    is ($rect && $rect->x, 20);
+    is ($rect && $rect->y, 10);
+  }
   $toplevel->destroy;
 }
 

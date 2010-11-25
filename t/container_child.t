@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2008, 2009, 2010 Kevin Ryde
+# Copyright 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -35,7 +35,7 @@ MyTestHelpers::glib_gtk_versions();
 Gtk2::Container->can('find_child_property')
   or plan skip_all => "due to no Gtk2::Container find_child_property()";
 
-plan tests => 23;
+plan tests => 4;
 
 
 {
@@ -58,13 +58,13 @@ plan tests => 23;
   my $foo = Foo->new (mystring => 'initial mystring');
 
   my $drawing = Gtk2::DrawingArea->new;
-  Glib::Ex::ConnectProperties->new
-      ([$drawing, 'child#x'],
-       [$foo, 'mystring']);
-  is ($foo->get('mystring'), undef);
-
   my $layout = Gtk2::Layout->new;
   $layout->put ($drawing, 2, 3);
+
+  is ($foo->get('mystring'), 'initial mystring');
+  Glib::Ex::ConnectProperties->new
+      ([$drawing, 'container-child#x'],
+       [$foo, 'mystring']);
   is ($foo->get('mystring'), 2);
 
   $layout->move ($drawing, 4, 5);

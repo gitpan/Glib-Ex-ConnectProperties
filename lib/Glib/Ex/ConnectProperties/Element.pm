@@ -23,7 +23,7 @@ use warnings;
 use Carp;
 our @CARP_NOT = ('Glib::Ex::ConnectProperties');
 
-our $VERSION = 11;
+our $VERSION = 12;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -36,6 +36,7 @@ sub new {
 
 sub check_property {
   my ($self) = @_;
+  ### Element check_property()
   $self->find_property
     || croak ("ConnectProperties: ", $self->{'object'},
               " has no property '", $self->{'pname'}, "'");
@@ -43,12 +44,14 @@ sub check_property {
 
 sub is_readable {
   my ($self) = @_;
+  ### Element is_readable()
   my $pspec;
   return (! ($pspec = $self->find_property)
           || ($pspec->get_flags & 'readable'));
 }
 sub is_writable {
   my ($self) = @_;
+  ### Element is_writable()
   my $pspec;
   return (! ($pspec = $self->find_property)
           || ($pspec->get_flags & 'writable'));

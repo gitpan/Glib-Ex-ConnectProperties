@@ -24,7 +24,7 @@ use Glib;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 11;
+our $VERSION = 12;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

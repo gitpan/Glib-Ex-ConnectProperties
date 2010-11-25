@@ -21,8 +21,23 @@
 use 5.008;
 use strict;
 use warnings;
-use Gtk2 '-init';
+use Glib;
+# use Gtk2 '-init';
 use Scalar::Util;
+
+{
+  my $x = Glib::ParamFlags->new ('readable');
+  my $y = Glib::ParamFlags->new ('writable');
+  print $x->all ($y, 0);
+  exit 0;
+}
+
+{
+  foreach my $pspec (Gtk2::Gdk::Window->list_properties) {
+    print $pspec->get_name,"\n";
+  }
+  exit 0;
+}
 
 {
   Gtk2::HBox->new;

@@ -16,6 +16,9 @@ You should have received a copy of the GNU General Public License along
 with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
+Version 12, November 2010
+    - new widget-allocation#rectangle
+    - avoid bad value_validate() on non ref counted boxed types like rectangles
 
 Version 11, September 2010
     - new widget-allocation

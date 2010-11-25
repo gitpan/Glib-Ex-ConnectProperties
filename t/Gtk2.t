@@ -25,12 +25,14 @@ use Test::More;
 
 use lib 't';
 use MyTestHelpers;
-BEGIN { MyTestHelpers::nowarnings() }
+BEGIN {
+  MyTestHelpers::nowarnings();
 
-eval { require Gtk2 }
-  or plan skip_all => "due to Gtk2 module not available -- $@";
+  eval { require Gtk2; 1 }
+    or plan skip_all => "due to Gtk2 module not available -- $@";
+}
 
-plan tests => 16;
+plan tests => 40;
 
 require Glib::Ex::ConnectProperties;
 MyTestHelpers::glib_gtk_versions();
@@ -108,6 +110,89 @@ MyTestHelpers::glib_gtk_versions();
   ok (! Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $c1,$c2));
   ok (! Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $c1,$c3));
   ok (! Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $c1,$c4));
+}
+
+#-----------------------------------------------------------------------------
+# boxed -- Gtk2::Gdk::Rectangle
+
+{
+  package MyRRR;
+  use strict;
+  use warnings;
+  use Glib;
+  use Glib::Object::Subclass
+    'Glib::Object',
+      properties => [Glib::ParamSpec->boxed
+                     ('rect',
+                      'rect',
+                      'Blurb.',
+                      'Gtk2::Gdk::Rectangle',
+                      Glib::G_PARAM_READWRITE),
+                    ];
+  sub SET_PROPERTY {
+    my ($self, $pspec, $newval) = @_;
+    ### Bar SET_PROPERTY: $newval
+    ### values: $newval && $newval->values
+    $self->{'rect'} = ($newval && $newval->copy);
+  }
+}
+
+SKIP: {
+  # eval {Glib->VERSION(1.240);1}
+  #   or skip 'due to value_validate() buggy on non ref counted boxed before 1.240', 18;
+
+  my $o1 = MyRRR->new;
+  my $o2 = MyRRR->new;
+  Glib::Ex::ConnectProperties->new ([$o1,'rect'],
+                                    [$o2,'rect']);
+  is ($o1->get('rect'), undef, 'o1 rect initial undef');
+  is ($o2->get('rect'), undef, 'o2 rect initial undef');
+
+  $o1->set(rect => Gtk2::Gdk::Rectangle->new(1,2,3,4));
+  foreach my $o ($o1, $o2) {
+    my $r = $o->get('rect');
+    is ($r && $r->x, 1, 'r.x');
+    is ($r && $r->y, 2);
+    is ($r && $r->width, 3);
+    is ($r && $r->height, 4);
+  }
+
+  $o2->set(rect => Gtk2::Gdk::Rectangle->new(5,6,7,8));
+  foreach my $o ($o1, $o2) {
+    my $r = $o->get('rect');
+    is ($r && $r->x, 5, 'r.x');
+    is ($r && $r->y, 6);
+    is ($r && $r->width, 7);
+    is ($r && $r->height, 8);
+  }
+}
+SKIP: {
+  # eval {Glib->VERSION(1.240);1}
+  #   or skip 'due to value_validate() buggy on non ref counted boxed before 1.240', 6;
+
+  my $o1 = MyRRR->new;
+  my $o2 = MyRRR->new;
+  Glib::Ex::ConnectProperties->new
+      ([$o1,'rect'],
+       [$o2,'rect',
+        write_only => 1,
+        func_in => sub {
+          my ($rect) = @_;
+          return $rect && $rect->new ($rect->x * 10,
+                                      $rect->y * 10,
+                                      $rect->width * 10,
+                                      $rect->height * 10);
+
+        }]);
+  is ($o1->get('rect'), undef, 'o1 rect initial undef');
+  is ($o2->get('rect'), undef, 'o2 rect initial undef');
+
+  $o1->set(rect => Gtk2::Gdk::Rectangle->new(1,2,3,4));
+  my $r = $o2->get('rect');
+  is ($r && $r->x, 10, 'r.x');
+  is ($r && $r->y, 20);
+  is ($r && $r->width, 30);
+  is ($r && $r->height, 40);
 }
 
 exit 0;

@@ -1,5 +1,5 @@
-libglib-ex-connectproperties-perl (11-1) unstable; urgency=low
+libglib-ex-connectproperties-perl (12-1) unstable; urgency=low
 
   * Packaged version.
 
- -- Kevin Ryde <user42@zip.com.au>  Sat, 02 Oct 2010 09:07:30 +1000
+ -- Kevin Ryde <user42@zip.com.au>  Fri, 26 Nov 2010 10:02:28 +1100

@@ -25,7 +25,7 @@ use Scalar::Util;
 use Module::Load;
 use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 11;
+our $VERSION = 12;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -154,6 +154,29 @@ sub disconnect {
   }
 }
 
+my $value_validate_method
+  = (
+     # Perl-Glib 1.200, value_validate() not wrapped
+     ! Glib::ParamSpec->can('value_validate')
+     ? sub {
+       my ($pspec, $value) = @_;
+       return (0,$value); # unmodified, original value, always wantarray
+     }
+
+     # Perl-Glib 1.220, value_validate() buggy on non ref counted boxed types
+     : ! eval{Glib->VERSION(1.240);1}
+     ? sub {
+       my ($pspec, $value) = @_;
+       my $type = $pspec->get_value_type;
+       if ($type->isa('Glib::Boxed') && ! $type->isa('Glib::Scalar')) {
+         return (0,$value); # unmodified, original value, always wantarray
+       }
+       return $pspec->value_validate ($value);
+     }
+
+     # Perl-Glib 1.240, value_validate() good
+     : 'value_validate');
+
 # 'notify' or read_signal handler from a connected object
 sub _do_read_handler {
   my $from_elem = $_[-1];
@@ -188,7 +211,10 @@ sub _do_read_handler {
     }
 
     my $to_pspec = $to_elem->find_property
-      || next;  # if no container child property yet, etc
+      || do {
+        ### no to_pspec (no container child property yet, etc)
+        next;
+      };
     my $to_flags = $to_pspec->get_flags;
 
     # skip non-writable targets
@@ -203,9 +229,12 @@ sub _do_read_handler {
     # value_validate() to clamp $to_val for $to_pspec
     # value_validate() is wrapped in Glib 1.220, remove the check when ready
     # to demand that version
-    if (my $func = $to_pspec->can('value_validate')) {
-      (undef, $to_val) = $to_pspec->$func($to_val);
-    }
+    # In 1.240 may have to keep a new non ref counted boxed return from
+    # func_in() alive if value_validate() makes an alias, hence
+    # $to_val_keepalive.
+    #
+    my $to_val_keepalive = $to_val;
+    (undef, $to_val) = $to_pspec->$value_validate_method($to_val);
 
     # skip if target already contains $to_val, to avoid extra 'notify's
     if ($to_flags & 'readable') {
@@ -405,7 +434,7 @@ BEGIN {
 1;
 __END__
 
-=for stopwords Gtk2 CheckButton ConnectProperties enum arrayref ParamSpec pspecs Ryde Glib-Ex-ConnectProperties arrayrefs
+=for stopwords Gtk2 CheckButton ConnectProperties enum arrayref ParamSpec pspecs Ryde Glib-Ex-ConnectProperties arrayrefs superclass ie reparent Gtk2-Perl
 
 =head1 NAME
 
@@ -624,7 +653,7 @@ Value transformations specified in the element, if any.
 
 =item 2.
 
-C<value_validate()> for the target ParamSpec (in Glib-Perl 1.220 where that
+C<value_validate()> of the target ParamSpec (in Glib-Perl 1.220 where that
 method is available).
 
 =item 3.
@@ -634,11 +663,11 @@ what's desired (see L</Equality> below).
 
 =back
 
-The "in" transformations are for storing.  The C<func_in> is the most
-general, or the C<hash_in> is handy for a fixed set of possible values.
-C<value_validate> will then clamp numbers which might be out of range,
-perhaps manipulate string contents, etc.  The result might then not be
-exactly what was desired, but at least gives something which can be stored.
+The "in" transformations are for storing.  C<func_in> is the most general,
+or the C<hash_in> is handy for a fixed set of possible values.
+C<value_validate> will clamp numbers which might be out of range, perhaps
+manipulate string contents, etc.  The result may then not be exactly what
+was desired, but at least gives something which can be stored.
 
 =over
 
@@ -666,44 +695,44 @@ Apply C<< $value = $hashref->{$value} >> to transform values going in or
 coming out.
 
 If a C<$value> doesn't exist in the hash then the result will be C<undef> in
-the usual way.  Various tie modules can change that in creative ways, for
-example C<Hash::WithDefaults> to look in fallback hashes.
+the usual way.  Various tied hash modules can change that in creative ways,
+for example C<Hash::WithDefaults> to look in fallback hashes.
 
-The hashes are not copied, so future changes to their contents will be used
-by the ConnectProperties, though there's nothing to forcibly update values
-if the current settings might be affected.
+The hashes are not copied, so future changes to their contents will be used,
+though there's nothing to forcibly update values if the current settings
+might be affected.
 
 =back
 
-For a read-write property the "in" should generally be the inverse of "out".
+For a read-write property "in" should generally be the inverse of "out".
 Nothing is done to enforce that, but strange things are likely to happen if
 the two are inconsistent.
 
 A read-only property only needs an "out" transformation or a write-only
-property only needs an "in" transformation, including when forced to
-read-only or write-only with the C<read_only> or C<write_only> options above
-(L</General Options>).
+property only needs an "in" transformation, including when forced by the
+C<read_only> or C<write_only> options above (L</General Options>).
 
 =head1 OTHER SETTINGS
 
-The following additional object or widget settings can be accessed by
+The following additional object or widget settings can be used by
 ConnectProperties.  They're things which have signals notifying when they
-change, but are not properties as such.
+change, but are not plain object properties as such.
 
 The C<Gtk2> things don't create a dependency on C<Gtk2> unless you use them.
-The implementation is modular too so the extras are not loaded unless used.
-The C<#> separator character used here is not allowed in ParamSpec names, so
-these extra forms shouldn't clash with plain object property names.
+The implementation is modular so the extras are not loaded unless used.
+The C<#> separator character is not allowed in ParamSpec names so these
+extras don't clash with plain property names.
 
 =head2 Widget Allocation
 
 C<< $widget->allocation >> fields on a C<Gtk2::Widget> (see
 L<Gtk2::Widget>),
 
-    widget-allocation#width      integer, read-only
-    widget-allocation#height     integer, read-only
-    widget-allocation#x          integer, read-only
-    widget-allocation#y          integer, read-only
+    widget-allocation#width       integer, read-only
+    widget-allocation#height      integer, read-only
+    widget-allocation#x           integer, read-only
+    widget-allocation#y           integer, read-only
+    widget-allocation#rectangle   Gtk2::Gdk::Rectangle, read-only
 
 C<width> and C<height> are the widget's current size as set by its container
 parent (or the window manager for a top level).  The values are read-only,
@@ -713,18 +742,18 @@ but for example might be connected up to display somewhere,
       ([$toplevel, 'widget-allocation#width'],
        [$label,    'label']);
 
-One use could be to connect the allocated size of one widget up to the
-C<width-request> or C<height-request> of another, to make it follow that
-size, though how closely would depend what the target's container parent
+A possible use could be to connect the allocated size of one widget to the
+C<width-request> or C<height-request> of another so as to make it follow
+that size, though how closely depends on what the target's container parent
 might allow.
 
     Glib::Ex::ConnectProperties->new
       ([$image,  'widget-allocation#height'],
        [$vscale, 'height-request']);
 
-C<x> and C<y> are the position of the widget area within its windowed parent
-or grandparent, etc.  These values are probably of limited use, but are
-included for completeness.
+C<x> and C<y> are the position of the widget area within a windowed parent
+(or grandparent etc).  C<rectangle> is whole C<< $widget->allocation >>
+object.  These may be of limited use but are included for completeness.
 
 =head1 IMPLEMENTATION NOTES
 

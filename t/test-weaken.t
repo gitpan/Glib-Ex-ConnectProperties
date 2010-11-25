@@ -72,8 +72,8 @@ require Glib;
        return [ $obj1, $obj2, $conn ];
      });
   is ($leaks, undef, 'new() deep gc');
-  if ($leaks && defined &explain) {
-    diag "Test-Weaken ", explain $leaks;
+  if ($leaks) {
+    eval { diag "Test-Weaken ", explain($leaks) }; # explain in Test::More 0.82
   }
 }
 
@@ -89,8 +89,8 @@ require Glib;
        return $conn;
      });
   is ($leaks, undef, 'new() deep gc -- with objects already gone');
-  if ($leaks && defined &explain) {
-    diag "Test-Weaken ", explain $leaks;
+  if ($leaks) {
+    eval { diag "Test-Weaken ", explain($leaks) }; # explain in Test::More 0.82
   }
 }
 
@@ -104,8 +104,8 @@ require Glib;
        return [ $obj1, $obj2, $conn ];
      });
   is ($leaks, undef, 'dynamic() deep gc');
-  if ($leaks && defined &explain) {
-    diag "Test-Weaken ", explain $leaks;
+  if ($leaks) {
+    eval { diag "Test-Weaken ", explain($leaks) }; # explain in Test::More 0.82
   }
 }
 
@@ -121,8 +121,8 @@ require Glib;
        return $conn;
      });
   is ($leaks, undef, 'dynamic() deep gc -- with objects already gone');
-  if ($leaks && defined &explain) {
-    diag "Test-Weaken ", explain $leaks;
+  if ($leaks) {
+    eval { diag "Test-Weaken ", explain($leaks) }; # explain in Test::More 0.82
   }
 }
 
