@@ -16,12 +16,18 @@ You should have received a copy of the GNU General Public License along
 with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
+Version 13, November 2010
+    - new child#prop
+    - new model-rows#empty, #not-empty
+    - new widget#direction, #screen, #has-screen, #state, #toplevel
+
 Version 12, November 2010
     - new widget-allocation#rectangle
-    - avoid bad value_validate() on non ref counted boxed types like rectangles
+    - workaround bad value_validate() on non ref counted boxed types
+      like rectangles
 
 Version 11, September 2010
-    - new widget-allocation
+    - new widget-allocation#width, #height, #x, #y
 
 Version 10, September 2010
     - new dynamic() connection style

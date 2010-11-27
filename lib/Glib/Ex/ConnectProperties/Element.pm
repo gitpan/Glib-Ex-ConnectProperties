@@ -23,7 +23,7 @@ use warnings;
 use Carp;
 our @CARP_NOT = ('Glib::Ex::ConnectProperties');
 
-our $VERSION = 12;
+our $VERSION = 13;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -55,6 +55,20 @@ sub is_writable {
   my $pspec;
   return (! ($pspec = $self->find_property)
           || ($pspec->get_flags & 'writable'));
+}
+
+sub connect_signals {
+  my ($self) = @_;
+  ### Element connect_signals()
+  my $object = $self->{'object'};
+  my $ids = $self->{'ids'} = Glib::Ex::SignalIds->new ($object);
+  foreach my $signame (delete $self->{'read_signal'} || $self->read_signals) {
+    ### $signame
+    $ids->add ($object->signal_connect
+               ($signame,
+                \&Glib::Ex::ConnectProperties::_do_read_handler,
+                $self));
+  }
 }
 
 1;

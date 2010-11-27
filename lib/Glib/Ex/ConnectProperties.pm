@@ -25,7 +25,7 @@ use Scalar::Util;
 use Module::Load;
 use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 12;
+our $VERSION = 13;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -104,18 +104,12 @@ sub new {
       $elem->{'func_in'} =  $elem->{'func_out'} = \&_bool_not;
     }
 
-    my $object = $elem->{'object'};
     Scalar::Util::weaken ($elem->{'object'});
 
     if (! delete $elem->{'write_only'} && $elem->is_readable) {
       $first_readable_elem ||= $elem;
       $elem->{'self'} = $self;
-      my $ids = $elem->{'ids'} = Glib::Ex::SignalIds->new ($object);
-      foreach my $signame (delete $elem->{'read_signal'}
-                           || $elem->read_signals) {
-        ### $signame
-        $ids->add ($object->signal_connect ($signame, \&_do_read_handler, $elem));
-      }
+      $elem->connect_signals;
       Scalar::Util::weaken ($elem);  # the element of $self->{'array'}
     }
   }
@@ -151,6 +145,7 @@ sub disconnect {
   ### ConnectProperties disconnect: "$self ".scalar(@$array)." elems"
   while (my $elem = pop @$array) {
     delete $elem->{'ids'};
+    delete $elem->{'ids2'};
   }
 }
 
@@ -212,7 +207,7 @@ sub _do_read_handler {
 
     my $to_pspec = $to_elem->find_property
       || do {
-        ### no to_pspec (no container child property yet, etc)
+        ### no to_pspec (such as no container child property yet, etc)
         next;
       };
     my $to_flags = $to_pspec->get_flags;
@@ -434,7 +429,7 @@ BEGIN {
 1;
 __END__
 
-=for stopwords Gtk2 CheckButton ConnectProperties enum arrayref ParamSpec pspecs Ryde Glib-Ex-ConnectProperties arrayrefs superclass ie reparent Gtk2-Perl
+=for stopwords Perl-Gtk2 Perl-Gtk Gtk CheckButton ConnectProperties enum arrayref ParamSpec pspecs Ryde Glib-Ex-ConnectProperties arrayrefs superclass ie reparent Gtk2-Perl unparented Unparenting reparented ltr rtl toplevel prelight
 
 =head1 NAME
 
@@ -714,19 +709,66 @@ C<read_only> or C<write_only> options above (L</General Options>).
 
 =head1 OTHER SETTINGS
 
-The following additional object or widget settings can be used by
-ConnectProperties.  They're things which have signals notifying when they
-change, but are not plain object properties as such.
+The following additional object or widget settings can be accessed by
+ConnectProperties.  They're either other property forms, or attributes which
+have some sort of signal notifying when they change.
 
 The C<Gtk2> things don't create a dependency on C<Gtk2> unless you use them.
-The implementation is modular so the extras are not loaded unless used.
-The C<#> separator character is not allowed in ParamSpec names so these
-extras don't clash with plain property names.
+The implementation is modular too so the extras are not loaded unless used.
+The C<#> separator character doesn't clash with plain properties as it's not
+allowed in a ParamSpec name.
+
+=head2 Container Child Properties
+
+C<Gtk2::Container> subclasses can define "child properties" which exist on a
+widget when it's in that type of container.  For example C<Gtk2::Table> has
+child properties for the attach positions of each child.  These are separate
+from normal object properties.
+
+Child properties can be accessed from ConnectProperties in Perl-Gtk2 1.240
+and up (where C<find_child_property> is available).  The property names are
+"child#top-attach" etc on the child widget.
+
+    Glib::Ex::ConnectProperties->new
+      ([$adj,         'value'],
+       [$childwidget, 'child#bottom-attach']);
+
+C<$childwidget> should be in a container which has the given child property.
+If unparented later then nothing is read or written.  Unparenting happens
+during destruction and quietly doing nothing is usually what you want.
+
+It's unspecified yet what happens if C<$childwidget> is reparented.  In the
+current code Gtk emits a C<child-notify> for each property so the initial
+value from the container propagates out.  It may be better to apply the
+first readable ConnectProperties element onto the child, like a
+ConnectProperties creation.  But noticing a reparent requires a
+C<parent-set> or C<notify::parent> signal, so perhaps a C<watch_reparent>
+option should say when reparent handling might be needed by the application,
+so as not to listen for something which won't happen.
+
+=head2 Tree Model Rows
+
+The existence of rows in a C<Gtk2::TreeModel> can be accessed with
+
+    model-rows#empty            boolean, read-only
+    model-rows#not-empty        boolean, read-only
+
+These are read-only but might for instance be connected up to make a control
+widget sensitive only when a model has rows to act on.
+
+    Glib::Ex::ConnectProperties->new
+      ([$model,  'model-rows#not-empty'],
+       [$button, 'sensitive']);
+
+Emptiness is simply from C<get_iter_first>, with the C<row-deleted> or
+C<row-inserted> signals to notice becoming empty or not empty
+(C<row-inserted> for becoming not empty, C<row-deleted> for becoming empty
+possibly).
 
 =head2 Widget Allocation
 
-C<< $widget->allocation >> fields on a C<Gtk2::Widget> (see
-L<Gtk2::Widget>),
+C<< $widget->allocation >> fields on a C<Gtk2::Widget> (see L<Gtk2::Widget>)
+can be read with
 
     widget-allocation#width       integer, read-only
     widget-allocation#height      integer, read-only
@@ -752,8 +794,73 @@ might allow.
        [$vscale, 'height-request']);
 
 C<x> and C<y> are the position of the widget area within a windowed parent
-(or grandparent etc).  C<rectangle> is whole C<< $widget->allocation >>
+(or grandparent etc).  C<rectangle> is the whole C<< $widget->allocation >>
 object.  These may be of limited use but are included for completeness.
+
+=head2 Widget Various
+
+The following various widget attributes can be accessed from
+ConnectProperties.
+
+    widget#direction      Gtk2::TextDirection enum, ltr or rtl
+    widget#screen         Gtk2::Gdk::Screen
+    widget#has-screen     boolean, read-only
+    widget#state          Gtk2::StateType enum
+    widget#toplevel       Gtk2::Window or undef, read-only
+
+These things aren't properties (though perhaps they could have been) but
+instead have get/set methods and report changes with signals such as
+C<direction-changed> or C<state-changed>.
+
+=over
+
+=item *
+
+C<widget#direction> is the "ltr" or "rtl" text direction, per
+C<get_direction> and C<set_direction> methods.
+
+If "none" is set then C<get_direction> gives back "ltr" or "rtl" following
+the global default.  Storing "none" with ConnectProperties probably won't
+work very well, except to a forced C<write_only> target so that it's not
+read back.
+
+=item *
+
+C<widget#screen> uses the C<get_screen> method and so gives the default
+screen until the widget is added to a toplevel C<Gtk2::Window> or similar
+to determine the screen.  
+
+C<widget#screen> is read-only for most widgets, but is writable for anything
+with a C<set_screen> method such as C<Gtk2::Menu>.  There's a plain
+C<screen> property on C<Gtk2::Window> so it doesn't need this special
+C<widget#screen>.  C<Gtk2::Gdk::Screen> is new in Gtk 2.2 and
+C<widget#screen> and C<widget#has-screen> are not available in Gtk 2.0.x.
+
+=item *
+
+C<widget#state> is the C<state> / C<set_state> condition, such as "normal"
+or "prelight".
+
+Note that storing "insensitive" doesn't work very well, since a subsequent
+setting back to "normal" doesn't turn the sensitive flag back on.  Perhaps
+this will change in the future, so as to actually enforce the desired new
+state.
+
+=item *
+
+C<widget#toplevel> is the topmost parent with C<toplevel> flag set, or
+C<undef> if no such.  This is C<get_toplevel> and its recommended
+C<< $parent->toplevel >> flag check, and as notified by
+C<hierarchy-changed>.
+
+    Glib::Ex::ConnectProperties->new
+      ([$toolitem, 'widget#toplevel'],
+       [$dialog,   'transient-for']);
+
+The toplevel is normally a C<Gtk2::Window> or subclass but in principle
+could be another class.
+
+=back
 
 =head1 IMPLEMENTATION NOTES
 
@@ -778,7 +885,7 @@ If already right then the C<set> call is not made at all.
 =back
 
 The in-progress flag acts against immediate further C<notify>s.  This could
-be done by temporarily disconnecting or blocking the handlers, but that
+also be done by temporarily disconnecting or blocking the handlers, but that
 seems more work than ignoring.
 
 The compare-before-set copes with C<freeze_notify> because in that case the
@@ -859,10 +966,11 @@ C<SET_PROPERTY>.  For example,
     }
 
 This sort of notify should be done in any object or widget implementation.
-Failing to do so will in particular mean ConnectProperties doesn't work, and
-probably other things.  A C<SET_PROPERTY> can call out to a setter function
-like this to re-use code.  The extra C<notify> call in that case is harmless
-and Glib collapses it to just one notify at the end of C<SET_PROPERTY>.
+But failing to do so will in particular mean ConnectProperties doesn't work,
+and probably other things.  A C<SET_PROPERTY> can call out to a setter
+function like the above to re-use code.  The extra C<notify> call in that
+case is harmless and Glib collapses it to just one notify at the end of
+C<SET_PROPERTY>.
 
 =head1 SEE ALSO
 

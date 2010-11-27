@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Glib-Ex-ConnectProperties
-version:            12
+version:            13
 abstract:           Link properties between objects.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -55,7 +55,7 @@ optional_features:
             Test::DistManifest:  0
             Test::Pod:           1.00
             Test::Synopsis:      0
-            Test::Weaken:        2.000
+            Test::Weaken:        2.002
             Test::YAML::Meta:    0.15
             YAML:                0
             YAML::Syck:          0

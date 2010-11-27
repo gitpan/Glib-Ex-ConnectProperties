@@ -126,7 +126,8 @@ MyTestHelpers::glib_gtk_versions();
   ok (! Glib::Ex::ConnectProperties::_pspec_equal ($pspec, $c1,$c2));
 
  SKIP: {
-    my $default_display = Gtk2::Gdk::Display->get_default;
+    my $default_display = (Gtk2::Gdk::Display->can('get_default') # new in 2.2
+                           && Gtk2::Gdk::Display->get_default);
     if (! $default_display) {
       skip "due to no default display", 2;
     }

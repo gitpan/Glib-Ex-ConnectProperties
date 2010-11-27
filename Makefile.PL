@@ -54,7 +54,7 @@ MyMakeMakerExtras::WriteMakefile
         optional_features
         => { maximum_tests
              => { description => 'Have "make test" do as much as possible.',
-                  requires => { 'Test::Weaken' => '2.000',
+                  requires => { 'Test::Weaken' => '2.002',
                                 'Module::Util' => 0,
                                 'Gtk2' => 0,
                               },

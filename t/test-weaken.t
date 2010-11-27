@@ -30,7 +30,7 @@ eval "use Test::Weaken 2.000; 1"
   or plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
 diag ("Test::Weaken version ", Test::Weaken->VERSION);
 
-plan tests => 4;
+plan tests => 5;
 
 require Glib::Ex::ConnectProperties;
 require Glib;
@@ -121,6 +121,25 @@ require Glib;
        return $conn;
      });
   is ($leaks, undef, 'dynamic() deep gc -- with objects already gone');
+  if ($leaks) {
+    eval { diag "Test-Weaken ", explain($leaks) }; # explain in Test::More 0.82
+  }
+}
+
+{
+  my $obj1 = Foo->new (myprop_one => 1, myprop_two => 1);
+  my $obj2 = Foo->new (myprop_one => 0, myprop_two => 0);
+  my $leaks = Test::Weaken::leaks
+    ({ constructor => sub {
+         return Glib::Ex::ConnectProperties->dynamic ([$obj1,'myprop-one'],
+                                                      [$obj2,'myprop-two']);
+       },
+       ignore => sub {
+         my ($ref) = @_;
+         return ($ref == $obj1 || $ref == $obj2);
+       },
+     });
+  is ($leaks, undef, 'dynamic() deep gc -- with objects persisting');
   if ($leaks) {
     eval { diag "Test-Weaken ", explain($leaks) }; # explain in Test::More 0.82
   }

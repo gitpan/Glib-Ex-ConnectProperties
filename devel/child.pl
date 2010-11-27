@@ -17,58 +17,57 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
-
+use 5.010;
 use strict;
 use warnings;
 use Glib::Ex::ConnectProperties;
-use Gtk2 '-init';
+use Gtk2;
 use Gtk2 1.220; # 1.240 for find_child_property()
 
 use FindBin;
 my $progname = $FindBin::Script;
 
-my $toplevel = Gtk2::Window->new('toplevel');
-# $toplevel->set_policy (1, 1, 1);
-$toplevel->signal_connect (destroy => sub { Gtk2->main_quit });
-
 my $vbox = Gtk2::VBox->new (0,0);
-$toplevel->add ($vbox);
-
-my $padding_spin;
-{
-  my $hbox = Gtk2::HBox->new;
-  $vbox->pack_start ($hbox, 0,0,0);
-  $hbox->pack_start (Gtk2::Label->new ('Padding'),0,0,0);
-  $padding_spin = Gtk2::SpinButton->new_with_range (0, 100, 1);
-  $hbox->pack_start ($padding_spin, 1,1,0);
-}
+# pack_start() doesn't go through "add"
+$vbox->signal_connect_after
+  (add => sub {
+     my ($vbox, $child) = @_;
+     print "vbox add: $child\n";
+   });
+$vbox->signal_connect_after
+  (remove => sub {
+     my ($vbox, $child) = @_;
+     print "vbox remove: $child\n";
+   });
 
 my $label = Gtk2::Label->new ('Hello');
-$vbox->pack_start ($label, 1,1,0);
-my $label2 = Gtk2::Label->new ('');
-$vbox->pack_start ($label2, 1,1,0);
+$label->signal_connect_after
+  (parent_set => sub {
+     my ($label) = @_;
+     print "label parent-set: ",$label->get_parent//'[undef]',"\n";
+     if (my $parent =  $label->get_parent) {
+       $parent->child_set_property($label,padding=>123);
+     }
+   });
+$label->signal_connect
+  (notify => sub {
+     my ($label, $pspec) = @_;
+     my $pname = $pspec->get_name;
+     print "label notify: $pname = ",
+       $label->get($pname)//'[undef]',"\n";
+   });
+$label->signal_connect
+  (child_notify => sub {
+     my ($label, $pspec) = @_;
+     my $pname = $pspec->get_name;
+     print "label child-notify: $pname = ",
+       $label->get_parent->child_get_property($label,$pname)//'[undef]',"\n";
+   });
 
-my $conn = Glib::Ex::ConnectProperties->new
-  ([$label, 'container-child#padding' ],
-   [$padding_spin, 'value']);
+# $vbox->add($label);
+$vbox->pack_start($label,0,0,0);
+print "now mnemonic-widget: ",$label->get('mnemonic-widget')//'[undef]',"\n";
 
-Glib::Ex::ConnectProperties->new
-  ([$label, 'container-child#padding' ],
-   [$label2, 'label']);
-
-{
-  my $button = Gtk2::Button->new_with_label ('Disconnect');
-  $vbox->pack_start ($button, 0,0,0);
-  $button->signal_connect (clicked => sub { $conn->disconnect });
-}
-{
-  my $button = Gtk2::Button->new_with_label ('Quit');
-  $button->signal_connect (clicked => sub { $toplevel->destroy; });
-  $vbox->pack_start ($button, 0, 0, 0);
-}
-
-$toplevel->show_all;
-Gtk2->main;
-
-print "$progname: conn ",(defined $conn ? "defined\n" : "not defined\n");
+print "destroy vbox\n";
+$vbox->destroy;
 exit 0;

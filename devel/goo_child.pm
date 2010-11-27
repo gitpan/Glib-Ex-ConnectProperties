@@ -15,36 +15,34 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
-package Glib::Ex::ConnectProperties::Element::container_child;
+package Glib::Ex::ConnectProperties::Element::goo_child;
 use 5.008;
 use strict;
 use warnings;
 use Carp;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 12;
+our $VERSION = 13;
 
 # uncomment this to run the ### lines
-#use Smart::Comments;
+use Smart::Comments;
 
+# no check
 sub check_property {
-  # my ($self) = @_;
+  my ($self) = @_;
   ### Element-child check_property()
-
-  # check this initially rather than a slew of errors from find_property()
-  # later when attempting to set
-  Gtk2::Container->can('find_child_property')
-      || croak 'ConnectProperties: No Gtk2::Container find_child_property() in this Perl-Gtk';
+  Goo::Canvas::Item->can('find_child_property')
+      || croak 'ConnectProperties: No Gtk2::Canvas::Item->find_child_property in this Goo-Canvas';
 }
 
-# always read/write in case no parent or no such property
+# always read/write in case not a child yet
 use constant is_readable => 1;
 use constant is_writable => 1;
 
 sub find_property {
   my ($self) = @_;
   ### Element-child find_property()
-  my $parent;
+  my ($parent, $coderef);
   return (($parent = $self->{'object'}->get_parent)
           && $parent->find_child_property ($self->{'pname'}));
 }
@@ -52,9 +50,14 @@ sub find_property {
 sub read_signals {
   my ($self) = @_;
   return ('child-notify::' . $self->{'pname'});
-  # 'parent-set'
+
+  # 'notify::parent'
 }
 
+# Goo::Canvas::Item has get_child_properties() / set_child_properties(), and
+# in Goo::Canvas 0.06 only the plurals wrapped, not the singular names
+# get_child_property() / set_child_property()
+#
 sub get_value {
   my ($self) = @_;
   ### Element-child get_value(): $self->{'pname'}
@@ -62,7 +65,7 @@ sub get_value {
   my $object = $self->{'object'};
   my $parent;
   return (($parent = $object->get_parent)
-          && $parent->child_get_property ($object, $self->{'pname'}));
+          $parent->get_child_properties ($object, $self->{'pname'}));
 }
 sub set_value {
   my ($self, $value) = @_;
@@ -70,7 +73,7 @@ sub set_value {
   ### parent: $self->{'object'}->get_parent
   my $object = $self->{'object'};
   if (my $parent = $object->get_parent) {
-    $parent->child_set_property ($object, $self->{'pname'}, $value);
+    $parent->set_child_properties ($object, $self->{'pname'}, $value);
   }
 }
 
@@ -78,6 +81,30 @@ sub set_value {
 __END__
 
 
+
+
+
+# =head2 C<Goo::Canvas> Child Properties
+# 
+# C<Goo::Canvas::Item> defines "child properties" which exist on an item
+# when it's the child of a particular item grouping class.  For example
+# C<Goo::Canvas::Table> has attachment points and options for each child.
+# These are separate from an item's normal object properties.
+#
+# Child properties can be accessed from ConnectProperties in Goo-Canvas
+# 0.???  under a property name like "goo-child#top-attach" on a child item.
+# 
+#     Glib::Ex::ConnectProperties->new
+#       ([$childitem, 'goo-child#left-padding'],
+#        [$adj,       'value']);
+#
+# Currently the C<$childitem> must have a parent, which must have the given
+# child property, and the parent cannot be changed.  In the future this will
+# probably be relaxed, for flexibility, but it's not quite clear yet exactly
+# what should happen when there's no parent, or when a new parent is gained,
+# or if the parent at a particular time doesn't have the given property.
+#
+# Goo::Canvas::Item
 
 # The case where a widget has a parent and doesn't change is clear, it's
 # just a property with C<child_set_property> etc for getting and setting.
@@ -91,46 +118,3 @@ __END__
 # propagated to the child setting, or if the child setting is first then
 # from it to the other elements.  Don't rely on this.  It will probably
 # change.  Perhaps C<undef> on no parent would be better.
-
-
-
-
-
-
-
-
-# =head2 Container Child Properties
-# 
-# C<Gtk2::Container> classes define "child properties" which exist on a widget
-# when it's the child of a particular type of container.  For example
-# C<Gtk2::Table> has attachment positions and options as child properties.
-# These are separate from a widget's normal object properties.
-# 
-# Child properties can be used from ConnectProperties in Gtk2-Perl 1.240 and
-# higher (where C<find_child_property> is available).  The property names are
-# "container-child#top-attach" etc on the child widget.
-# 
-#     Glib::Ex::ConnectProperties->new
-#       ([$adj,         'value'],
-#        [$childwidget, 'container-child#bottom-attach']);
-# 
-# Currently C<$childwidget> should have a parent with the given child
-# property.  If it's unparented later then nothing is read from or written to
-# it.
-# 
-# If C<$childwidget> is reparented then it's currently unspecified what will
-# happen.  Perhaps it should behave like an initial connection creation and
-# write to it from the first readable.  Perhaps if it's the first readable
-# then propagate its current value out.  Noticing a reparent requires the
-# C<parent-set> signal, so perhaps an option could say whether that might be
-# needed, so save setting that when not needed.
-
-
-
-
-# "container-child#top-attach"
-# 
-# "goo-child#top-attach"
-# "child#top-attach"
-
-

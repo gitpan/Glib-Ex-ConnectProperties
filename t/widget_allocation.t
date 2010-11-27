@@ -26,7 +26,7 @@ use Test::More;
 
 use lib 't';
 use MyTestHelpers;
-# BEGIN { MyTestHelpers::nowarnings() }
+BEGIN { MyTestHelpers::nowarnings() }
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2008, 2009, 2010 Kevin Ryde
+# Copyright 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -21,19 +21,21 @@
 use 5.008;
 use strict;
 use warnings;
+use Glib::Ex::ConnectProperties;
 use Test::More;
 
 use lib 't';
 use MyTestHelpers;
-# BEGIN { MyTestHelpers::nowarnings() }
-
-require Glib::Ex::ConnectProperties;
+BEGIN { MyTestHelpers::nowarnings() }
 
 eval { require Gtk2 }
   or plan skip_all => "due to Gtk2 module not available -- $@";
 MyTestHelpers::glib_gtk_versions();
 
-plan tests => 6;
+Gtk2::Container->can('find_child_property')
+  or plan skip_all => "due to no Gtk2::Container find_child_property()";
+
+plan tests => 4;
 
 
 {
@@ -52,32 +54,27 @@ plan tests => 6;
                     ];
 }
 
-#------------------------------------------------------------------------------
-# direction
-
 {
   my $foo = Foo->new (mystring => 'initial mystring');
 
-  my $label = Gtk2::Label->new;
+  my $drawing = Gtk2::DrawingArea->new;
+  my $layout = Gtk2::Layout->new;
+  $layout->put ($drawing, 2, 3);
+
+  is ($foo->get('mystring'), 'initial mystring');
   Glib::Ex::ConnectProperties->new
-      ([$label, 'widget#direction'],
-       [$foo,   'mystring']);
-  is ($label->get_direction, $foo->get('mystring'));
+      ([$drawing, 'child#x'],
+       [$foo, 'mystring']);
+  is ($foo->get('mystring'), 2);
 
-  $label->set_direction ('none');
-  is ($label->get_direction, $foo->get('mystring'));
+  $layout->move ($drawing, 4, 5);
+  is ($foo->get('mystring'), 4);
 
-  $label->set_direction ('ltr');
-  is ($label->get_direction, $foo->get('mystring'));
+  $foo->set (mystring => 6);
+  is ($layout->child_get_property($drawing,'x'), 6);
 
-  $label->set_direction ('rtl');
-  is ($label->get_direction, $foo->get('mystring'));
-
-  $foo->set (mystring => 'ltr');
-  is ($label->get_direction, $foo->get('mystring'));
-
-  $foo->set (mystring => 'rtl');
-  is ($label->get_direction, $foo->get('mystring'));
+  $layout->remove ($drawing);
+  $foo->set (mystring => 99);
 }
 
 exit 0;

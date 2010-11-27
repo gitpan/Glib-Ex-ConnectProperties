@@ -23,7 +23,7 @@ use warnings;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 12;
+our $VERSION = 13;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -40,7 +40,7 @@ my %pspecs = do {
                                     -32768, # min
                                     32767,  # max
                                     0,      # default
-                                    ['readable']);
+                                    'readable');
   (x      => $pspec,
    y      => $pspec,
    width  => $pspec,
@@ -49,7 +49,7 @@ my %pspecs = do {
                                         'Rectangle',  # nick
                                         '',           # blurb
                                         'Gtk2::Gdk::Rectangle',
-                                        ['readable']),
+                                        'readable'),
   )
 };
 sub find_property {

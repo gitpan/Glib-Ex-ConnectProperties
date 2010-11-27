@@ -15,60 +15,63 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 842745cb706f8f2126506f544492f7a80dbe29b3 COPYING
-SHA1 0c865964fe12eaffdcaa8816d5b9d903134dce04 Changes
-SHA1 2957dbff1ff0ff3b2afcae489fab6f3d6c386b73 MANIFEST
+SHA1 52207cb01160f9f3a96fbd582a48b466a474901a Changes
+SHA1 560eb0469761bf653bc76e64426af13cd05359a0 MANIFEST
 SHA1 e6e7c2904ea5d300c0ddf70fc5a80f5005229aa9 MANIFEST.SKIP
-SHA1 00666c1a1e6f5dd55e77084f91d687e79f5befbf META.yml
-SHA1 f380b35d798eb64684e60b1b0a99c8ecc8991145 Makefile.PL
+SHA1 5e5f7269559062041969be72eeb49c8de58acaa7 META.yml
+SHA1 0a25294090e6e362db173889f5cb04a7e0499d61 Makefile.PL
 SHA1 22ba650ce4e64e33367c3abd7ec843417584eba3 README
-SHA1 46ad5600baa9d46859b04411a8ec2c11adda9fe5 debian/changelog
+SHA1 9ef8a26e3bf3a2a0840e061d3c5f134b012c06d5 debian/changelog
 SHA1 ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4 debian/compat
 SHA1 f99d48f8d685af76e7e3ddd1fd88a5311d813588 debian/control
 SHA1 e79ddc7a072e8cc68a1e33e77b18ef2404bd1f95 debian/copyright
 SHA1 6604489c7bb727e788a4c5ca515dc385efaa0e89 debian/rules
 SHA1 61652cd1568dcf2614df833eba241755eee34e89 debian/source/format
 SHA1 222af98267c863b43256e7302b24c41b21d73788 debian/watch
-SHA1 2e35d7f011ecbba50ba3c1148b6d8561d4532c7b devel/child.pl
-SHA1 df258539964f00b63b406a642732964873a39da4 devel/container.pm
-SHA1 ec355c35ef9252fcaab47ad2f280a729693f8c52 devel/container_child.pm
-SHA1 8c830be68559093ff6bb4491779382923d93b513 devel/dialog_set_response_sensitive.pm
-SHA1 9da2145f9ae9eefcf46753c777483bddf9154305 devel/goo-child.pl
-SHA1 89622f953082bd099a37cd63771bcb039167f57a devel/goo-child.pm
+SHA1 2e35d7f011ecbba50ba3c1148b6d8561d4532c7b devel/child-run.pl
+SHA1 7b25e06f49bb573c1c06567677118c54a7d74898 devel/child.pl
+SHA1 5c21ffcfb6e9b50f486dbf6df737a0aab1b3134a devel/container.pm
+SHA1 9da2145f9ae9eefcf46753c777483bddf9154305 devel/goo_child.pl
+SHA1 32801711561959c0663dca2a4ec8d8c5adeb0c5a devel/goo_child.pm
 SHA1 5c51a7783ea2b662827c181ebab7929b4ea67d63 devel/hash-undef.pl
 SHA1 ce392cb7334fd5f410383fe373b6e1bce02a9439 devel/infinite-notify.pl
 SHA1 d6ee6a10ca7a3ed8dcd502e5b9d046bcb1968e8c devel/misc.pl
-SHA1 3beb2f16336dbe65f811aa96f390e2fb5e2aedfc devel/model_rows.pm
+SHA1 c8799053e950e3dee8199ab07e02a757a16513b3 devel/model.pl
 SHA1 95e574fa739017fba25508dc58b5b080a2bfb785 devel/proptypes.pl
 SHA1 a1bd0cd5c10d8d02030b2f30bc29e1e7fba65258 devel/read-on-signal.pl
+SHA1 21626d2bbacd75935493b9f805fefb6de37a9261 devel/response_sensitive.pm
 SHA1 d2899b8fa41880aeafc712cc88a70dfbb081e90c devel/run.pl
 SHA1 ee1239197538c855cb49a63cf5c278a068178144 devel/transform.pl
+SHA1 a14490dc877961b438f3d392ca03f024da64948c devel/tree_selection.pm
 SHA1 cc8fc38678df0a9703a205f28bf07cc5bb88ec64 devel/type-prefix.pl
 SHA1 a17e2a0d236d6264949cc66630128ba6e1c88792 devel/unichar.pl
 SHA1 62704a4e51b2fdd5a73a0ac2856259a70542d689 devel/value-validate-boxed.pl
-SHA1 9506a6ca626a69b7e5b453b36729e2958df44156 devel/widget.pm
-SHA1 d99be737602a5cc9fea333b61c164c820599fc70 devel/widget_direction.pl
-SHA1 ab38e0c227960b8b1572089a070263e4da80e482 devel/widget_direction.pm
-SHA1 61471e1f48c9b19e52d7a5411901c28477af65ce devel/widget_direction.t
-SHA1 e788c903327e590f50e540a8b94fcd6abff42656 devel/widget_direction_loading.t
-SHA1 7c2ee58034436fabe7e0e8b95ae3391e76bd755d devel/widget_toplevel.pl
-SHA1 83673c94b9e37883f8d93e8340e8d2ccda27e4fa devel/widget_toplevel.pm
+SHA1 0ed8ccca0cec042298efe7d03425683d4a66d792 devel/widget-direction.pl
+SHA1 7c2ee58034436fabe7e0e8b95ae3391e76bd755d devel/widget-toplevel.pl
 SHA1 c4f5c02f24ddece0c68aae219ac9d37da1053953 examples/func-transform.pl
 SHA1 cb62d312707f4e47ef11d09e206375a8cd25a554 examples/hash-transform.pl
 SHA1 34a002d86f3e171115862668c4100bd51ed4e0ac examples/sensitive.pl
 SHA1 4fb53efe76b3b2264eaa4cf7780cb0c4923e18a5 inc/MyMakeMakerExtras.pm
 SHA1 692a1ddc2ca6b98cac7b48ea40bc1ac1509e8ed9 inc/my_pod2html
-SHA1 5e200e6c7c7af64bfda0aea4234bb67febf91f73 lib/Glib/Ex/ConnectProperties.pm
-SHA1 f6c16cf0341e648fa736e02d8e2ee3966681d04f lib/Glib/Ex/ConnectProperties/Element.pm
-SHA1 0c3e392005de1d525e9e6dd93a26802bdcb8a11c lib/Glib/Ex/ConnectProperties/Element/object.pm
-SHA1 6859aa903522217b4da2c29dd20849fec6c04d8b lib/Glib/Ex/ConnectProperties/Element/widget_allocation.pm
-SHA1 de7d81ae11628823e72c9b4fe1f79fe35a5ab04a t/ConnectProperties.t
-SHA1 a4a54e93c7e6fd109c56d5f8fcf2e39aae0023c0 t/Gtk2-display.t
+SHA1 0babda5f36503f5fb1076ecee152d948e3ecf8fa lib/Glib/Ex/ConnectProperties.pm
+SHA1 d41781bc690d4476a77b4d0175ebe734881f8e86 lib/Glib/Ex/ConnectProperties/Element.pm
+SHA1 397607ae74f4c09788d72671f49396a3f30b1b36 lib/Glib/Ex/ConnectProperties/Element/child.pm
+SHA1 1f7e1911ca9d1b198d2b56a2134a30d34270f9b5 lib/Glib/Ex/ConnectProperties/Element/model_rows.pm
+SHA1 c8b13360862e90891ff6f839f95a9ea00a01ec5b lib/Glib/Ex/ConnectProperties/Element/object.pm
+SHA1 c98669f7e4dd4e30ab0965a326946e86aa8106e2 lib/Glib/Ex/ConnectProperties/Element/widget.pm
+SHA1 fd4ee1ed955ec28a95df318c9b7e84f41edfd46b lib/Glib/Ex/ConnectProperties/Element/widget_allocation.pm
+SHA1 5e1cee91a5f4d6670a30e2ca3f8f2f18a9fcffab t/ConnectProperties.t
+SHA1 0eb5e127704f5e078c4178f06e4dc6467893d5a2 t/Gtk2-display.t
 SHA1 5ca47f0f47e9bde0ff1c60a0058a4f0def10a93a t/Gtk2.t
 SHA1 5e5680b471811244fe93571efc23e7b6089cac3b t/MyTestHelpers.pm
 SHA1 0400efa28fa18cb46201acf0f183d0cbdc70aa6f t/POSIX.t
-SHA1 16b256b7a4969cd44e70d626e6c1c6cc85045836 t/container_child.t
-SHA1 103909d2bfb3ff38fd542c491e53b502c9391667 t/test-weaken.t
-SHA1 ebaefb71d4ae0e2e0c3d12e2f113f3d581f09f45 t/widget_allocation.t
+SHA1 d1def02613faf63ac625b0c14a8433b9e2def736 t/child.t
+SHA1 fef710c935c72d7c7ce0c5b18f7c76a7e7e8b67a t/model-rows-weaken.t
+SHA1 70bbcc22bc79514830eebeb65580938e28a18adf t/model-rows.t
+SHA1 8eddfdb1f310a20d479740cf018cf74f60587bd7 t/test-weaken.t
+SHA1 c7a20d040591a64f0b95dae99aa785258a4f6255 t/widget-load.t
+SHA1 3541c9b119b010ef6eb4be39adbf37b4fc4d39c0 t/widget.t
+SHA1 6e24905bc1bf4576ee936ff29b5fca7db96d07fc t/widget_allocation.t
 SHA1 9127f78a0dfa04976acbb979dd7862ef59a74c58 xt/0-META-read.t
 SHA1 37abd43b41068804ea4bb099fdd89af21be82926 xt/0-Test-DistManifest.t
 SHA1 8f93fb4c8f0424a4442cc93c9a2e86342ef55281 xt/0-Test-Pod.t
@@ -77,7 +80,7 @@ SHA1 fb517c2fae5ddac559318bf6a224949115ea3129 xt/0-Test-YAML-Meta.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iD8DBQFM7vKaLFMCIV9q3ToRArlLAKCCFPknPnGVRihG2RvWtY5Ewx6HkQCZAdVM
-YPjz3rnjo3yxJNxOCwcneSQ=
-=hXZY
+iD8DBQFM8YuULFMCIV9q3ToRAtnpAJ4tM5U8N7sXC9CUJPhs3ZOXNGdnOACgt16H
+j3UADpmdPIcNExYA2lYAWi0=
+=sTYC
 -----END PGP SIGNATURE-----

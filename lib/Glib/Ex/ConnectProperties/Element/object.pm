@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 12;
+our $VERSION = 13;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

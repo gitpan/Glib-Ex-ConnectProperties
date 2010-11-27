@@ -30,7 +30,7 @@ require Glib::Ex::ConnectProperties;
 
 #-----------------------------------------------------------------------------
 # VERSION
-my $want_version = 12;
+my $want_version = 13;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');
@@ -90,7 +90,7 @@ MyTestHelpers::glib_gtk_versions();
                                    'readonly-float',
                                    'Blurb about readonly float.',
                                    -2000, 2000, 222,
-                                   ['readable']),
+                                   'readable'),
 
                                   Glib::ParamSpec->string
                                   ('mystring',

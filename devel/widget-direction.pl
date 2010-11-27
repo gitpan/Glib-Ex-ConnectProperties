@@ -73,7 +73,7 @@ my $conn = Glib::Ex::ConnectProperties->new
    [$dir_combo, 'active-nick']);
 
 # Glib::Ex::ConnectProperties->new
-#   ([$label, 'widget-direction#dir'' ],
+#   ([$label, 'widget#direction'' ],
 #    [$label2, 'label']);
 
 {

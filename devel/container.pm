@@ -1,5 +1,17 @@
 # no signal for child added, emission of parent-set only
 
+# container#empty
+# container#non-empty
+# container#count-children
+#   emission hook of parent-set probably, as nothing on container itself
+
+# container-children#empty
+# container-children#non-empty
+# container-children#count
+# container-children#top-count
+
+
+
 
 
 # Copyright 2010 Kevin Ryde
@@ -28,16 +40,10 @@ use Glib;
 use Scalar::Util;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 12;
+our $VERSION = 13;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
-
-
-# container-children#empty
-# container-children#non-empty
-# container-children#count
-# container-children#top-count
 
 # my $conn = Glib::Ex::ConnectProperties->new
 #   ([$menu,   'container-children#non-empty' ],
@@ -50,7 +56,7 @@ my %pspecs = do {
                                         'c', # name
                                         '',  # blurb
                                         0,   # default
-                                        ['readable']);
+                                        'readable');
   ('empty'     => $pspec,
    'non-empty' => $pspec)
 };

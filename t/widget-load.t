@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010 Kevin Ryde
+# Copyright 2008, 2009, 2010 Kevin Ryde
 
 # This file is part of Gtk2-Ex-ConnectProperties.
 #
@@ -18,25 +18,24 @@
 # with Gtk2-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
-use 5.008;
 use strict;
 use warnings;
-use Glib::Ex::ConnectProperties;
 use Test::More;
 
 use lib 't';
 use MyTestHelpers;
-# BEGIN { MyTestHelpers::nowarnings() }
+BEGIN { MyTestHelpers::nowarnings() }
 
-eval { require Gtk2 }
-  or plan skip_all => "due to Gtk2 module not available -- $@";
-MyTestHelpers::glib_gtk_versions();
+eval { require Module::Util }
+  or plan skip_all => "due to Module::Util not available -- $@";
+{
+ my $find = Module::Util::find_installed('Gtk2');
+  diag 'find Gtk2: ',$find;
+  $find
+    or plan skip_all => 'due to Gtk2 module not available';
+}
 
-Gtk2::Container->can('find_child_property')
-  or plan skip_all => "due to no Gtk2::Container find_child_property()";
-
-plan tests => 4;
-
+plan tests => 1;
 
 {
   package Foo;
@@ -45,6 +44,8 @@ plan tests => 4;
   use Glib;
   use Glib::Object::Subclass
     'Glib::Object',
+      signals => { direction_changed => { },
+                 },
       properties => [Glib::ParamSpec->string
                      ('mystring',
                       'mystring',
@@ -52,26 +53,28 @@ plan tests => 4;
                       '', # default
                       Glib::G_PARAM_READWRITE),
                     ];
+  sub get_direction {
+    my ($self) = @_;
+    return $self->{'direction'};
+  }
+  sub set_direction {
+    my ($self, $dir) = @_;
+    $self->{'direction'} = $dir;
+  }
 }
+
+#------------------------------------------------------------------------------
+# check widget.pm loads without Gtk2 yet loaded
 
 {
   my $foo = Foo->new (mystring => 'initial mystring');
+  my $bar = Foo->new (mystring => 'initial mystring');
 
-  my $drawing = Gtk2::DrawingArea->new;
-  my $layout = Gtk2::Layout->new;
-  $layout->put ($drawing, 2, 3);
-
-  is ($foo->get('mystring'), 'initial mystring');
+  require Glib::Ex::ConnectProperties;
   Glib::Ex::ConnectProperties->new
-      ([$drawing, 'container-child#x'],
-       [$foo, 'mystring']);
-  is ($foo->get('mystring'), 2);
-
-  $layout->move ($drawing, 4, 5);
-  is ($foo->get('mystring'), 4);
-
-  $foo->set (mystring => 6);
-  is ($layout->child_get_property($drawing,'x'), 6);
+      ([$foo, 'widget#direction'],
+       [$bar, 'mystring']);
+  ok(1);
 }
 
 exit 0;
