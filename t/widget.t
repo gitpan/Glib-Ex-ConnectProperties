@@ -119,7 +119,7 @@ SKIP: {
 
 SKIP: {
   Gtk2::Widget->can('has_screen')
-      or skip 'no has_screen(), per Gtk 2.0.x';
+      or skip 'no has_screen(), per Gtk 2.0.x', 5;
 
   my $foo = Foo->new (mystring => 'initial mystring');
 

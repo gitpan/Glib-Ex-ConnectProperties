@@ -1,19 +1,3 @@
-# no signal for child added, emission of parent-set only
-
-# container#empty
-# container#non-empty
-# container#count-children
-#   emission hook of parent-set probably, as nothing on container itself
-
-# container-children#empty
-# container-children#non-empty
-# container-children#count
-# container-children#top-count
-
-
-
-
-
 # Copyright 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
@@ -31,6 +15,28 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
+
+
+
+# no signal for child added, emission of parent-set only
+# parent-set to undef must check all
+
+# container#empty
+# container#not-empty
+# container#count-children
+#   emission hook of parent-set probably, as nothing on container itself
+
+# container-children#empty
+# container-children#not-empty
+# container-children#count
+# container-children#top-count
+
+
+
+
+
+
+
 package Glib::Ex::ConnectProperties::Element::container;
 use 5.008;
 use strict;
@@ -40,25 +46,33 @@ use Glib;
 use Scalar::Util;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 13;
+our $VERSION = 14;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
 # my $conn = Glib::Ex::ConnectProperties->new
-#   ([$menu,   'container-children#non-empty' ],
+#   ([$menu,   'container-children#not-empty' ],
 #    [$button, 'sensitive']);
 
 
 my %pspecs = do {
   # dummy name as paramspec name cannot be empty string
-  my $pspec = Glib::ParamSpec->boolean ('c', # name
-                                        'c', # name
+  my $pspec = Glib::ParamSpec->boolean ('e', # name
+                                        'e', # name
                                         '',  # blurb
                                         0,   # default
                                         'readable');
-  ('empty'     => $pspec,
-   'non-empty' => $pspec)
+  (empty       => $pspec,
+   'not-empty' => $pspec,
+   count       =>  Glib::ParamSpec->int ('count',  # name
+                                         'count',  # nick
+                                         '',   # blurb
+                                         0,    # min
+                                         999,  # max, unused
+                                         0,    # default
+                                         'readable'),
+  )
 };
 sub find_property {
   my ($self) = @_;
@@ -72,7 +86,6 @@ sub new {
     (parent_set => \&_do_parent_set_emission);
 
   my $self = shift->SUPER::new(@_);
-  $self->{'empty'} = ! ($self->{'object'}->get_children)[0]; # initially
   Scalar::Util::weaken ($self->{'object'}->{'Glib_Ex_ConnectProperties'}->{$self+0} = $self);
   return $self;
 }
@@ -96,12 +109,22 @@ use constant read_signals => ();
 
 sub _do_parent_set_emission {
   my ($invocation_hint, $param_list) = @_;
-  my ($widget, $parent) = @$param_list;
-
-  if ($parent) {
+  my ($widget, $old_parent) = @$param_list;
+  if ($old_parent) {
+    foreach my $self (@{$old_parent->{'Glib_Ex_ConnectProperties'}}) {
+      if ($self->{'pname'} eq 'count'
+          || ($self->{'pname'} ne 'empty'
+              && ! $self->{'is_empty'})) {
+        Glib::Ex::ConnectProperties::_do_read_handler ($self);
+      }
+    }
+  }
+  if (my $parent = $widget->get_parent) {
     foreach my $self (@{$parent->{'Glib_Ex_ConnectProperties'}}) {
-      if ($self->{'empty'}) {
-        $self->{'empty'} = 0;
+      if ($self->{'pname'} eq 'count'
+          || ($self->{'pname'} eq 'not-empty'
+              && $self->{'is_empty'})) {
+        $self->{'is_empty'} = 0;
         Glib::Ex::ConnectProperties::_do_read_handler ($self);
       }
     }
@@ -110,7 +133,12 @@ sub _do_parent_set_emission {
 
 sub get_value {
   my ($self) = @_;
-  return ($self->{'empty'} ^ ($self->{'pname'} eq 'non-empty'));
+  my @children = $self->{'object'}->get_children;
+  my $pname = $self->{'pname'};
+  if ($pname eq 'count') {
+    return scalar @children;
+  }
+  return (@children != 0) ^ ($pname eq 'empty'));
 }
 sub set_value {
   die "oops, container-children is meant to be read-only";

@@ -1,20 +1,3 @@
-# "child#top-attach"
-# 
-# "goo-child#top-attach"
-# "child#top-attach"
-
-# container#empty
-# container#non-empty
-# container#count-children
-#   emission hook of parent-set probably, as nothing on container itself
-
-# container-children#empty
-# container-children#non-empty
-# container-children#count
-# container-children#count-recursive
-
-
-
 # Copyright 2010 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
@@ -39,23 +22,28 @@ use warnings;
 use Carp;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 13;
+our $VERSION = 14;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
 sub check_property {
-  # my ($self) = @_;
+  my ($self) = @_;
   ### Element-child check_property()
 
   # check find_child_property() method exists now rather than a slew of
   # errors from later when attempting to set
   Gtk2::Container->can('find_child_property') # wrapped in Perl-Gtk2 1.240
       || croak 'ConnectProperties: No Gtk2::Container find_child_property() in this Perl-Gtk';
+
+  # and that the property exists initially
+  $self->SUPER::check_property;
 }
 
 # base is_readable() / is_writable() are true if no find_property() pspec
-# # always read/write in case no parent or no such property
+# always read/write in case no parent or no such property.  But for now
+# demanding the widget be in a parent with the property initially.
+#
 # use constant is_readable => 1;
 # use constant is_writable => 1;
 

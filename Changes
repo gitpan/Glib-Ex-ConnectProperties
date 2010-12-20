@@ -16,6 +16,9 @@ You should have received a copy of the GNU General Public License along
 with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
+Version 14, November 2010
+    - new response-sensitive#RESP
+
 Version 13, November 2010
     - new child#prop
     - new model-rows#empty, #not-empty

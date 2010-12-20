@@ -26,6 +26,14 @@ use Glib;
 use Scalar::Util;
 
 {
+  require Gtk2;
+  Gtk2->init;
+  my $label = Gtk2::Label->new;
+  $label->set_state(0);
+  exit 0;
+}
+
+{
   my $x = Glib::ParamFlags->new ('readable');
   my $y = Glib::ParamFlags->new ('writable');
   print $x->all ($y, 0);

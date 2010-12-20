@@ -25,7 +25,7 @@ use Glib;
 use Gtk2;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 13;
+our $VERSION = 14;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -34,10 +34,18 @@ our $VERSION = 13;
 #
 #    parent-set   - already a "parent" property
 #
-
-# map-event, unmap-event, or unmap action?
-# widget#mapped
-# widget-flags#mapped
+# Other possibilities:
+#     widget#screen-nodefault      only when has-screen
+#     
+#     widget#mapped
+#     widget-flags#mapped
+#         change on map-event, unmap-event, or unmap action?
+#
+#     widget-style#pname         style-set prop readable
+#     widget-style#fg.normal     writable modify-fg
+#     widget-style#property.foo
+#     widget-style-property#pname     style-set prop readable
+#
 
 my %pspecs = (direction => Glib::ParamSpec->enum ('direction',
                                                   'direction',

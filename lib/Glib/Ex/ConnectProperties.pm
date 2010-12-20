@@ -25,7 +25,7 @@ use Scalar::Util;
 use Module::Load;
 use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 13;
+our $VERSION = 14;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -60,6 +60,8 @@ our $VERSION = 13;
 
 sub new {
   my ($class, @array) = @_;
+  ### ConnectProperties new()
+
   if (@array < 2) {
     croak 'ConnectProperties: new() must have two or more object/property pairs';
   }
@@ -116,6 +118,7 @@ sub new {
 
   # set initially from first readable, in case not already the same
   if ($first_readable_elem) {
+    ### initial propagate
     _do_read_handler ($first_readable_elem->{'object'}, $first_readable_elem);
   }
   return $self;
@@ -745,6 +748,40 @@ ConnectProperties creation.  But noticing a reparent requires a
 C<parent-set> or C<notify::parent> signal, so perhaps a C<watch_reparent>
 option should say when reparent handling might be needed by the application,
 so as not to listen for something which won't happen.
+
+=head2 Response Sensitive
+
+Response sensitivity on a C<Gtk2::Dialog>, C<Gtk2::InfoBar> or similar can
+be controlled from ConnectProperties with
+
+    response-sensitive#ok       boolean
+    response-sensitive#123      boolean
+
+The name part after the "#" is a C<Gtk2::ResponseType> nick or name, or an
+integer for application defined response codes (usually a positive integer).
+
+    Glib::Ex::ConnectProperties->new
+      ([$job,    'have-help-available'],
+       [$dialog, 'response-sensitive#help', write_only => 1]);
+
+C<response-sensitive> is always writable, applied with
+C<set_response_sensitive>.  Often writing is all that's needed and the
+C<write_only> option can force that if desired (see L</General Options>).
+
+C<response-sensitive> is readable if C<get_response_for_widget()> is
+available, which means Gtk 2.8 up for Dialog, but not available for InfoBar
+(as of Gtk 2.22).  There must be at least one button etc using the response,
+since sensitivity is not recorded in the dialog, it only sets the
+C<sensitive> property of action area widgets.  ConnectProperties currently
+assumes the first widget it finds using the response will not be removed.
+Perhaps this will be relaxed in the future, but perhaps only as an option
+since buttons are normally unchanging and noticing would need extra signal
+listening.
+
+Button sensitivity can be controlled directly by finding the widget (or
+perhaps multiple widgets) for the given response and setting their
+C<sensitive> property.  Going through C<response-sensitive#> lets someone
+else do the widget lookups.
 
 =head2 Tree Model Rows
 

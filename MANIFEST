@@ -9,6 +9,7 @@ debian/source/format
 debian/watch
 devel/child-run.pl
 devel/child.pl
+devel/combobox.pl
 devel/container.pm
 devel/goo_child.pl
 devel/goo_child.pm
@@ -18,7 +19,6 @@ devel/misc.pl
 devel/model.pl
 devel/proptypes.pl
 devel/read-on-signal.pl
-devel/response_sensitive.pm
 devel/run.pl
 devel/transform.pl
 devel/tree_selection.pm
@@ -37,6 +37,7 @@ lib/Glib/Ex/ConnectProperties/Element.pm
 lib/Glib/Ex/ConnectProperties/Element/child.pm
 lib/Glib/Ex/ConnectProperties/Element/model_rows.pm
 lib/Glib/Ex/ConnectProperties/Element/object.pm
+lib/Glib/Ex/ConnectProperties/Element/response_sensitive.pm
 lib/Glib/Ex/ConnectProperties/Element/widget.pm
 lib/Glib/Ex/ConnectProperties/Element/widget_allocation.pm
 Makefile.PL
@@ -52,6 +53,9 @@ t/model-rows-weaken.t
 t/model-rows.t
 t/MyTestHelpers.pm
 t/POSIX.t
+t/response-sensitive-infobar.t
+t/response-sensitive-read.t
+t/response-sensitive.t
 t/test-weaken.t
 t/widget-load.t
 t/widget.t
