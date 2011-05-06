@@ -1,4 +1,4 @@
-# Copyright 2007, 2008, 2009, 2010 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -25,7 +25,7 @@ use Scalar::Util;
 use Module::Load;
 use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 14;
+our $VERSION = 15;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -432,7 +432,7 @@ BEGIN {
 1;
 __END__
 
-=for stopwords Perl-Gtk2 Perl-Gtk Gtk CheckButton ConnectProperties enum arrayref ParamSpec pspecs Ryde Glib-Ex-ConnectProperties arrayrefs superclass ie reparent Gtk2-Perl unparented Unparenting reparented ltr rtl toplevel prelight
+=for stopwords Perl-Gtk2 Perl-Gtk2's Perl-Gtk Gtk CheckButton ConnectProperties enum arrayref ParamSpec pspecs Ryde Glib-Ex-ConnectProperties arrayrefs superclass ie reparent Gtk2-Perl unparented Unparenting reparented ltr rtl toplevel prelight InfoBar lookups TreeView IconView TreeViews TreeSelection selected-iter
 
 =head1 NAME
 
@@ -457,7 +457,7 @@ of them is propagated to the others.
 
 This is an easy way to tie a user control widget to a setting elsewhere.
 For example a CheckButton C<active> could be linked to the C<visible> of
-another widget, letting the user click to hide or show it.
+another widget, letting the user click to hide or show.
 
       +--------------------+             +-------------+
       | CheckButton/active |  <------->  | Foo/visible |
@@ -470,9 +470,18 @@ controlling, no matter how the target changes.
 
 =head2 Property Types
 
-String, number, enum, flags, and object property types are supported.  A few
-boxed types like C<Glib::Strv> and C<Gtk2::Gdk::Color> work too, but others
-may not (see L</Equality> below).
+The property types supported are
+
+    string
+    number         (integer or float)
+    enum
+    flags
+    object         (Glib::Object
+    string array   (Glib::Strv)
+    some boxed     (Glib::Boxed)
+
+Boxed types which work include C<Gtk2::Gdk::Color> and
+C<Gtk2::Gdk::Rectangle>, but others may not.  See L</Equality> below.
 
 Read-only properties can be given.  They're propagated out to the other
 linked properties but changes in those others are not stored back.  This can
@@ -491,15 +500,19 @@ write-only.
 It works to link two properties on the same object.  This can ensure they
 update together.  It also works to have two different ConnectProperties with
 an object/property in common.  A change coming from one group propagates
-through to the other.  This arises quite naturally if you've got two
-controls for the same target -- neither needs to know the other exists.
+through to the other.  This arises quite naturally if there's two controls
+for the same target -- neither control needs to know the other exists.
 
 A property name can include an explicit class like C<GtkLabel::justify> as
-usual for C<set_property>, C<find_property>, etc.  If a subclass
-accidentally shadows a superclass property name then this gives access to
-the superclass, but is otherwise unnecessary.  A Perl subclass like
-C<My::Foo::Bar> is C<My__Foo__Bar::propname>, as usual for Perl module to
-Glib class name conversion.
+usual for C<set_property>, C<find_property>, etc.
+
+    [ $widget, 'GtkLabel::justify' ]
+
+If a subclass accidentally shadows a superclass property name then this
+gives access to the superclass, but is otherwise unnecessary and not
+recommended.  A Perl subclass like C<My::Foo::Bar> is
+C<My__Foo__Bar::propname>, as usual for Perl module to Glib class name
+conversion.
 
 =head1 FUNCTIONS
 
@@ -524,32 +537,33 @@ only as long as you keep that returned object.
 
 =back
 
-The arguments to both functions are arrayrefs with an object, a property
-name, and possible further options described below.  For example
+The arguments to both constructors are arrayrefs with an object, a property
+name, and perhaps further options described below.  For example
 
     Glib::Ex::ConnectProperties->new
       ([$aa_object, 'some-propname'],
        [$bb_object, 'another-propname']);
 
 An initial value is propagated from the first object+property (the first
-readable one) to set all the others in case they're not already the same.
-Put the object with the desired initial value first.
+readable one) to set all the others if they're not already the same.  Put
+the object with the desired initial value first.
 
 A ConnectProperties only keeps weak references to the objects, so the
 linkage doesn't prevent some or all of them being garbage collected.
 
 A C<dynamic()> linkage can be used if it's only wanted for a certain time,
 or if the target objects to link might change and you will want to drop the
-old and make a new one.  For example something like the following in a
+old and make a new.  For example something like the following inside a
 widget or object would allow a target to be changed, including changed to
 C<undef> for nothing to link.
 
     sub set_target {
       my ($self, $target_object) = @_;
       $self->{'conn'} =
-        $target_object && Glib::Ex::ConnectProperties->new
-                            ([$self,   'my-prop'],
-                             [$target, 'target-prop']);
+        $target_object
+          && Glib::Ex::ConnectProperties->dynamic
+                         ([$self,   'my-prop'],
+                          [$target, 'target-prop']);
     }
 
 =head2 Operations
@@ -560,8 +574,8 @@ C<undef> for nothing to link.
 
 Disconnect the given ConnectProperties linkage.
 
-This can be a linkage made by either C<new> and C<dynamic> above.  A dynamic
-one is disconnected automatically when garbage collected.
+C<$conn> can made by either C<new> and C<dynamic> above.  A dynamic one is
+disconnected automatically when garbage collected.
 
 =back
 
@@ -589,10 +603,10 @@ other properties writing back to a master control.
 Treat the property as write-only, ignoring any C<readable> flag in its
 ParamSpec.
 
-This could be used for display things such as a C<Gtk2::Label> which you
-want to set, but don't want to read back.  If the value is mangled for
-display (see L<Value Transformations> below) then there might not be an easy
-reverse transformation to read back anyway.
+This can be used for display things such as a C<Gtk2::Label> which you want
+to set, but don't want to read back.  If the value is mangled for display
+(see L<Value Transformations> below) then there might not be an easy reverse
+transformation to read back anyway.
 
     Glib::Ex::ConnectProperties->new
         ([$job, 'status'],
@@ -603,13 +617,13 @@ ConnectProperties is a couple less lines.
 
 =item C<< read_signal => $signame >>
 
-Connect to C<$signame> to see changes to the property.  The default
-C<notify::$propname> means a property change is immediately seen and
+Connect to C<$signame> to see changes to the property.  The default is
+C<notify::$propname> which means a property change is immediately seen and
 propagated.  A different signal can be used to do it at other times instead.
 
-For example on a C<Gtk2::Entry> the C<text> property notifies for every
-character typed by the user.  With the C<activate> signal you can instead
-take the value only when the user presses Return.
+For example on a C<Gtk2::Entry> the C<text> property updates and notifies
+for every character typed by the user.  With the C<activate> signal you can
+instead take the value only when the user presses Return.
 
     Glib::Ex::ConnectProperties->new
         ([$entry, 'text', read_signal => 'activate'],
@@ -624,9 +638,9 @@ sort of user action.
 The return value for the C<read_signal> handler above.  The default return
 is C<undef>.
 
-Most signals that make sense for C<read_signal> have no return value
-(ie. C<void>), so nothing particular is needed.  But as an example if a
-widget event handler was a good time to look at a property then a return of
+Most signals which make sense have no return value (ie. C<void>), so no
+particular return is needed.  But as an example if a widget event handler
+was a good time to look at a property then a return of
 C<Gtk2::EVENT_PROPAGATE> would generally be wanted to let other handlers see
 the event too.
 
@@ -640,8 +654,7 @@ the event too.
 
 =head2 Value Transformations
 
-The following value transformations can be specified with parameters in each
-object/property element.  Storing a value goes through the following steps,
+Storing a value goes through the following steps,
 
 =over
 
@@ -656,16 +669,28 @@ method is available).
 
 =item 3.
 
-Equality check, if the target is readable, to avoid a C<set> if it's already
-what's desired (see L</Equality> below).
+Equality check, if the target is readable, to avoid a C<set_property()> if
+it's already what's desired (see L</Equality> below).
+
+=item 4.
+
+C<set_property()>
 
 =back
 
-The "in" transformations are for storing.  C<func_in> is the most general,
-or the C<hash_in> is handy for a fixed set of possible values.
-C<value_validate> will clamp numbers which might be out of range, perhaps
-manipulate string contents, etc.  The result may then not be exactly what
-was desired, but at least gives something which can be stored.
+C<value_validate()> does things like clamp numbers outside the ParamSpec
+min/max, perhaps manipulate string contents, etc.  The result may then not
+be exactly what was desired, but at least gives something which can be
+stored.
+
+Perl's usual value coercing such as stringizing, numizing, low bits of
+integers, etc, applies to the C<value_validate()> call, and the
+C<set_property()> call, in the usual way.  This means string properties can
+be linked to number properties or similar with no special tranformations.
+
+In the following options the "in" transformations are for storing and the
+"out" for reading.  C<func> is the most general, or C<hash> is handy for a
+fixed set of possible values.
 
 =over
 
@@ -697,36 +722,36 @@ the usual way.  Various tied hash modules can change that in creative ways,
 for example C<Hash::WithDefaults> to look in fallback hashes.
 
 The hashes are not copied, so future changes to their contents will be used,
-though there's nothing to forcibly update values if the current settings
-might be affected.
+though there's nothing to forcibly update property values if current
+settings might be affected.
 
 =back
 
-For a read-write property "in" should generally be the inverse of "out".
+For a read-write property the "in" should generally be the inverse of "out".
 Nothing is done to enforce that, but strange things are likely to happen if
 the two are inconsistent.
 
-A read-only property only needs an "out" transformation or a write-only
-property only needs an "in" transformation, including when forced by the
-C<read_only> or C<write_only> options above (L</General Options>).
+A read-only property only needs an "out" transformation and a write-only
+property only needs an "in" transformation, including when the C<read_only>
+or C<write_only> options above force it (L</General Options>).
 
 =head1 OTHER SETTINGS
 
 The following additional object or widget settings can be accessed by
-ConnectProperties.  They're either other property forms, or attributes which
-have some sort of signal notifying when they change.
+ConnectProperties.  They're either other property forms, or are non-property
+attributes which have some sort of signal notifying when they change.
 
 The C<Gtk2> things don't create a dependency on C<Gtk2> unless you use them.
-The implementation is modular too so the extras are not loaded unless used.
-The C<#> separator character doesn't clash with plain properties as it's not
+The implementation is modular so the extras are not loaded unless used.  The
+C<#> separator character doesn't clash with plain properties as it's not
 allowed in a ParamSpec name.
 
 =head2 Container Child Properties
 
 C<Gtk2::Container> subclasses can define "child properties" which exist on a
 widget when it's in that type of container.  For example C<Gtk2::Table> has
-child properties for the attach positions of each child.  These are separate
-from normal object properties.
+child properties for the attach positions.  These are separate from normal
+object properties.
 
 Child properties can be accessed from ConnectProperties in Perl-Gtk2 1.240
 and up (where C<find_child_property> is available).  The property names are
@@ -746,8 +771,8 @@ value from the container propagates out.  It may be better to apply the
 first readable ConnectProperties element onto the child, like a
 ConnectProperties creation.  But noticing a reparent requires a
 C<parent-set> or C<notify::parent> signal, so perhaps a C<watch_reparent>
-option should say when reparent handling might be needed by the application,
-so as not to listen for something which won't happen.
+option should say when reparent handling might be needed, so as not to
+listen for something which won't happen.
 
 =head2 Response Sensitive
 
@@ -758,7 +783,7 @@ be controlled from ConnectProperties with
     response-sensitive#123      boolean
 
 The name part after the "#" is a C<Gtk2::ResponseType> nick or name, or an
-integer for application defined response codes (usually a positive integer).
+integer application-defined response code (usually a positive integer).
 
     Glib::Ex::ConnectProperties->new
       ([$job,    'have-help-available'],
@@ -768,15 +793,15 @@ C<response-sensitive> is always writable, applied with
 C<set_response_sensitive>.  Often writing is all that's needed and the
 C<write_only> option can force that if desired (see L</General Options>).
 
-C<response-sensitive> is readable if C<get_response_for_widget()> is
-available, which means Gtk 2.8 up for Dialog, but not available for InfoBar
-(as of Gtk 2.22).  There must be at least one button etc using the response,
-since sensitivity is not recorded in the dialog, it only sets the
-C<sensitive> property of action area widgets.  ConnectProperties currently
-assumes the first widget it finds using the response will not be removed.
-Perhaps this will be relaxed in the future, but perhaps only as an option
-since buttons are normally unchanging and noticing would need extra signal
-listening.
+C<response-sensitive> is readable if the widget has a
+C<get_response_for_widget()> method, which means Gtk 2.8 up for Dialog, but
+not available for InfoBar (as of Gtk 2.22).  There must be at least one
+button etc using the response, since sensitivity is not recorded in the
+dialog, it only sets the C<sensitive> property of action area widgets.
+ConnectProperties currently assumes the first widget it finds using the
+response will not be removed.  Perhaps this will be relaxed in the future,
+but perhaps only as an option since buttons are normally unchanging and
+extra listening would be needed to notice.
 
 Button sensitivity can be controlled directly by finding the widget (or
 perhaps multiple widgets) for the given response and setting their
@@ -790,17 +815,52 @@ The existence of rows in a C<Gtk2::TreeModel> can be accessed with
     model-rows#empty            boolean, read-only
     model-rows#not-empty        boolean, read-only
 
-These are read-only but might for instance be connected up to make a control
-widget sensitive only when a model has rows to act on.
+These are read-only but might for instance be used to make a control widget
+sensitive only when a model has rows to act on.
 
     Glib::Ex::ConnectProperties->new
       ([$model,  'model-rows#not-empty'],
        [$button, 'sensitive']);
 
-Emptiness is simply from C<get_iter_first>, with the C<row-deleted> or
-C<row-inserted> signals to notice becoming empty or not empty
-(C<row-inserted> for becoming not empty, C<row-deleted> for becoming empty
-possibly).
+Emptiness is simply per C<get_iter_first>.  C<row-deleted> or
+C<row-inserted> signals are used to listen for becoming empty or not empty.
+
+=head2 TreeView and IconView Selected Rows
+
+Row selection in a C<Gtk2::TreeSelection> object (as used by
+C<Gtk2::TreeView>) or in a C<Gtk2::IconView> can be accessed with
+
+    tree-selection#empty           boolean, read-only
+    tree-selection#not-empty       boolean, read-only
+    tree-selection#count           integer, read-only
+    tree-selection#selected-path   Gtk2::TreePath or undef
+
+    iconview-selection#empty           boolean, read-only
+    iconview-selection#not-empty       boolean, read-only
+    iconview-selection#count           integer, read-only
+    iconview-selection#selected-path   Gtk2::TreePath or undef
+
+For example "not-empty" might be connected up to make a delete button
+sensitive only when the user selects a row,
+
+    my $treeselection = $treeview->get_selection;
+    Glib::Ex::ConnectProperties->new
+      ([$treeselection, 'tree-selection#not-empty'],
+       [$button,        'sensitive', write_only => 1]);
+
+C<selected-path> is the first selected row and is intended for use with
+"single" selection mode where there's at most one row selected and a
+C<select_path()> switches from any existing selected row to just the new
+one.  It might be used to synchronise the selected item in two TreeViews.
+
+Rows in a TreeSelection and items in an IconView are similar but not quite
+the same and so are kept as separate C<tree-selection#> and
+C<icon-selection#>.
+
+For reference a "selected-iter" of type C<Gtk2::TreeIter> might mostly work,
+though would prefer an C<equal()> or C<compare()> in the type rather than
+going via the model (Perl-Gtk2's C<to_arrayref> field access only suits Perl
+code models).
 
 =head2 Widget Allocation
 
@@ -821,18 +881,19 @@ but for example might be connected up to display somewhere,
       ([$toplevel, 'widget-allocation#width'],
        [$label,    'label']);
 
-A possible use could be to connect the allocated size of one widget to the
+A possible use might be to connect the allocated size of one widget to the
 C<width-request> or C<height-request> of another so as to make it follow
 that size, though how closely depends on what the target's container parent
-might allow.
+might allow.  (See C<Gtk2::SizeGroup> for inducing a common width or height
+request among a set of widgets.)
 
     Glib::Ex::ConnectProperties->new
       ([$image,  'widget-allocation#height'],
        [$vscale, 'height-request']);
 
-C<x> and C<y> are the position of the widget area within a windowed parent
-(or grandparent etc).  C<rectangle> is the whole C<< $widget->allocation >>
-object.  These may be of limited use but are included for completeness.
+C<x> and C<y> are the position of the widget area within its windowed
+ancestor.  C<rectangle> is the whole C<< $widget->allocation >> object.
+These may be of limited use but are included for completeness.
 
 =head2 Widget Various
 
@@ -846,8 +907,7 @@ ConnectProperties.
     widget#toplevel       Gtk2::Window or undef, read-only
 
 These things aren't properties (though perhaps they could have been) but
-instead have get/set methods and report changes with signals such as
-C<direction-changed> or C<state-changed>.
+instead have get/set methods and report changes with specific signals.
 
 =over
 
@@ -868,10 +928,11 @@ screen until the widget is added to a toplevel C<Gtk2::Window> or similar
 to determine the screen.  
 
 C<widget#screen> is read-only for most widgets, but is writable for anything
-with a C<set_screen> method such as C<Gtk2::Menu>.  There's a plain
-C<screen> property on C<Gtk2::Window> so it doesn't need this special
-C<widget#screen>.  C<Gtk2::Gdk::Screen> is new in Gtk 2.2 and
-C<widget#screen> and C<widget#has-screen> are not available in Gtk 2.0.x.
+with a C<set_screen> such as C<Gtk2::Menu>.  There's a plain C<screen>
+property on C<Gtk2::Window> so it doesn't need this special
+C<widget#screen>, but other widgets benefit.  C<Gtk2::Gdk::Screen> is new in
+Gtk 2.2 and C<widget#screen> and C<widget#has-screen> are not available in
+Gtk 2.0.x.
 
 =item *
 
@@ -885,10 +946,9 @@ state.
 
 =item *
 
-C<widget#toplevel> is the topmost parent with C<toplevel> flag set, or
-C<undef> if no such.  This is C<get_toplevel> and its recommended
-C<< $parent->toplevel >> flag check, and as notified by
-C<hierarchy-changed>.
+C<widget#toplevel> is an ancestor with C<toplevel> flag set, or C<undef> if
+none.  This is C<get_toplevel> and its recommended C<< $parent->toplevel >>
+flag check (as notified by C<hierarchy-changed>).
 
     Glib::Ex::ConnectProperties->new
       ([$toolitem, 'widget#toplevel'],
@@ -925,7 +985,7 @@ The in-progress flag acts against immediate further C<notify>s.  This could
 also be done by temporarily disconnecting or blocking the handlers, but that
 seems more work than ignoring.
 
-The compare-before-set copes with C<freeze_notify> because in that case the
+Compare-before-set copes with C<freeze_notify> because in that case the
 C<notify> calls don't come while the "in progress" flag is on, only later,
 perhaps a long time later.
 
@@ -981,14 +1041,14 @@ C<values_cmp>, if/when that's possible.
 =back
 
 C<Glib::Param::Object> pspecs could perhaps benefit from using an C<equal>
-or C<compare> method on the value type the same as for boxed objects.  But
+or C<compare> method on the object the same as for boxed objects.  But
 usually when setting a C<Glib::Object> it's a particular object which is
 desired, not just contents.  If that's not so then as with C<Glib::Scalar>
-it may be handled by a ParamSpec subclass with a C<values_cmp> to express
-when different objects are equal enough (which, if/when possible, would work
-for both C code and Perl code comparing).
+it could be handled by a ParamSpec subclass with a C<values_cmp> to express
+when different objects are equal enough.  If/when possible that would work
+for both C code and Perl code comparisons.
 
-=head2 Notifies
+=head2 Object Authors
 
 If you're writing an object or widget (per L<Glib::Object::Subclass>) don't
 forget to explicitly C<notify> when changing a property outside a
@@ -1002,11 +1062,11 @@ C<SET_PROPERTY>.  For example,
       }
     }
 
-This sort of notify should be done in any object or widget implementation.
-But failing to do so will in particular mean ConnectProperties doesn't work,
-and probably other things.  A C<SET_PROPERTY> can call out to a setter
-function like the above to re-use code.  The extra C<notify> call in that
-case is harmless and Glib collapses it to just one notify at the end of
+This sort of C<notify> should be done in any object or widget
+implementation.  Failing to do so will in particular mean ConnectProperties
+doesn't work, and probably other things.  A C<SET_PROPERTY> can call out to
+a setter function like the above to re-use code.  In that case Glib
+collapses the C<notify> to just one notify signal at the end of
 C<SET_PROPERTY>.
 
 =head1 SEE ALSO
@@ -1014,13 +1074,15 @@ C<SET_PROPERTY>.
 L<Glib::Object>,
 L<Glib::ParamSpec>
 
+L<Glib::Boxed>
+
 =head1 HOME PAGE
 
 L<http://user42.tuxfamily.org/glib-ex-connectproperties/index.html>
 
 =head1 LICENSE
 
-Copyright 2007, 2008, 2009, 2010 Kevin Ryde
+Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
 
 Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published by

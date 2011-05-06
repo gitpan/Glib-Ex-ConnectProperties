@@ -1,4 +1,4 @@
-# Copyright 2010 Kevin Ryde
+# Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -22,7 +22,7 @@ use warnings;
 use Carp;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 14;
+our $VERSION = 15;
 
 # uncomment this to run the ### lines
 use Smart::Comments;
@@ -42,7 +42,7 @@ use constant is_writable => 1;
 sub find_property {
   my ($self) = @_;
   ### Element-child find_property()
-  my ($parent, $coderef);
+  my $parent;
   return (($parent = $self->{'object'}->get_parent)
           && $parent->find_child_property ($self->{'pname'}));
 }

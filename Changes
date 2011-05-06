@@ -1,4 +1,4 @@
-Copyright 2008, 2009, 2010 Kevin Ryde
+Copyright 2008, 2009, 2010, 2011 Kevin Ryde
 
 This file is part of Glib-Ex-ConnectProperties.
 
@@ -16,8 +16,12 @@ You should have received a copy of the GNU General Public License along
 with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
 
+Version 15, May 2011
+    - new tree-selection# and iconview-selection# with
+      empty, not-empty, count, selected-path
+
 Version 14, November 2010
-    - new response-sensitive#RESP
+    - new response-sensitive#ID
 
 Version 13, November 2010
     - new child#prop

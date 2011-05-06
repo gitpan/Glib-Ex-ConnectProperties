@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2007, 2008, 2009, 2010 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -42,38 +42,38 @@ MyMakeMakerExtras::WriteMakefile
                    },
    MIN_PERL_VERSION => 5.008,
 
-   META_MERGE
-   => { resources
-        => { homepage
-             => 'http://user42.tuxfamily.org/glib-ex-connectproperties/index.html',
-           },
-        recommends
-        => { 'DateTime'           => 0,
-             'DateTime::TimeZone' => 0,
-           },
-        optional_features
-        => { maximum_tests
-             => { description => 'Have "make test" do as much as possible.',
-                  requires => { 'Test::Weaken' => '2.002',
-                                'Module::Util' => 0,
-                                'Gtk2' => 0,
-                              },
-                },
-             maximum_examples
-             => { description => 'Be able to run all the example programs.',
-                  requires => { 'Gtk2' => 0,
-                              },
-                },
-             maximum_devel
-             => { description => 'Stuff used variously for development.',
-                  requires => { 'Gtk2'        => 0,
-                                'Gtk2::Pango' => 0,
-                                'Glib::Object::Subclass' => 0,
-                                'Tie::Hash::TwoWay' => 0,
-                                'Goo::Canvas' => 0,
-                                'Smart::Comments' => 0,
-                              },
-                },
-           },
-      },
+   META_MERGE =>
+   { resources =>
+     { homepage =>
+       'http://user42.tuxfamily.org/glib-ex-connectproperties/index.html',
+     },
+     recommends =>
+     { 'DateTime'           => 0,
+       'DateTime::TimeZone' => 0,
+     },
+     optional_features =>
+     { maximum_tests =>
+       { description => 'Have "make test" do as much as possible.',
+         requires => { 'Test::Weaken' => '2.002',
+                       'Module::Util' => 0,
+                       'Gtk2' => 0,
+                     },
+       },
+       maximum_examples =>
+       { description => 'Be able to run all the example programs.',
+         requires => { 'Gtk2' => 0,
+                     },
+       },
+       maximum_devel =>
+       { description => 'Stuff used variously for development.',
+         requires => { 'Gtk2'        => 0,
+                       'Gtk2::Pango' => 0,
+                       'Glib::Object::Subclass' => 0,
+                       'Tie::Hash::TwoWay' => 0,
+                       'Goo::Canvas' => 0,
+                       'Smart::Comments' => 0,
+                     },
+       },
+     },
+   },
   );

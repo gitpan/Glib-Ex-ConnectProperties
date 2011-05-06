@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 # Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
@@ -15,36 +17,8 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
-package Glib::Ex::ConnectProperties::Element::object;
-use 5.008;
-use strict;
-use warnings;
-use base 'Glib::Ex::ConnectProperties::Element';
+use Glib::Ex::ConnectProperties;
 
-our $VERSION = 15;
-
-# uncomment this to run the ### lines
-#use Smart::Comments;
-
-
-sub get_value {
-  my ($self) = @_;
-  return $self->{'object'}->get_property ($self->{'pname'});
-}
-sub set_value {
-  my ($self, $value) = @_;
-  $self->{'object'}->set_property ($self->{'pname'}, $value);
-}
-
-sub find_property {
-  my ($self) = @_;
-  return $self->{'object'}->find_property ($self->{'pname'});
-}
-
-sub read_signals {
-  my ($self) = @_;
-  return 'notify::' . $self->{'pname'};
-}
-
-1;
-__END__
+use Test::More tests => 1;
+ok (1, 'Glib::Ex::ConnectProperties load as first thing');
+exit 0;

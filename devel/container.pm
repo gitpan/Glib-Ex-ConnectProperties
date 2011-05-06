@@ -1,4 +1,4 @@
-# Copyright 2010 Kevin Ryde
+# Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -14,7 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
-
 
 
 
@@ -46,7 +45,7 @@ use Glib;
 use Scalar::Util;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 14;
+our $VERSION = 15;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -63,9 +62,9 @@ my %pspecs = do {
                                         '',  # blurb
                                         0,   # default
                                         'readable');
-  (empty       => $pspec,
+  ('empty'     => $pspec,
    'not-empty' => $pspec,
-   count       =>  Glib::ParamSpec->int ('count',  # name
+   'count'     =>  Glib::ParamSpec->int ('count',  # name
                                          'count',  # nick
                                          '',   # blurb
                                          0,    # min
@@ -79,39 +78,42 @@ sub find_property {
   return $pspecs{$self->{'pname'}};
 }
 
-my $parent_set_id;
+my $emission_hook_id;
 my $instance_count = 0;
+
 sub new {
-  $parent_set_id ||= Gtk2::Widget->signal_add_emission_hook
-    (parent_set => \&_do_parent_set_emission);
+  $emission_hook_id ||= Gtk2::Widget->signal_add_emission_hook
+    (parent_set => \&_do_parent_set);
 
   my $self = shift->SUPER::new(@_);
-  Scalar::Util::weaken ($self->{'object'}->{'Glib_Ex_ConnectProperties'}->{$self+0} = $self);
+  Scalar::Util::weaken
+      ($self->{'object'}->{'Glib_Ex_ConnectProperties_container'}->{$self+0} = $self);
   return $self;
 }
 
 sub DESTROY {
   my ($self) = @_;
   if (my $object = $self->{'object'}) {
-    my $href = $object->{'Glib_Ex_ConnectProperties'};
+    my $href = $object->{'Glib_Ex_ConnectProperties_container'};
     delete $href->{$self+0};
     if (! %$href) {
-      delete $object->{'Glib_Ex_ConnectProperties'};
+      delete $object->{'Glib_Ex_ConnectProperties_container'};
     }
   }
   if (! --$instance_count) {
-    Gtk2::Widget->signal_remove_emission_hook ($parent_set_id);
-    undef $parent_set_id;
+    Gtk2::Widget->signal_remove_emission_hook ($emission_hook_id);
+    undef $emission_hook_id;
   }
 }
 
 use constant read_signals => ();
 
-sub _do_parent_set_emission {
+sub _do_parent_set {
   my ($invocation_hint, $param_list) = @_;
   my ($widget, $old_parent) = @$param_list;
+
   if ($old_parent) {
-    foreach my $self (@{$old_parent->{'Glib_Ex_ConnectProperties'}}) {
+    foreach my $self (@{$old_parent->{'Glib_Ex_ConnectProperties_container'}}) {
       if ($self->{'pname'} eq 'count'
           || ($self->{'pname'} ne 'empty'
               && ! $self->{'is_empty'})) {
@@ -120,7 +122,7 @@ sub _do_parent_set_emission {
     }
   }
   if (my $parent = $widget->get_parent) {
-    foreach my $self (@{$parent->{'Glib_Ex_ConnectProperties'}}) {
+    foreach my $self (@{$parent->{'Glib_Ex_ConnectProperties_container'}}) {
       if ($self->{'pname'} eq 'count'
           || ($self->{'pname'} eq 'not-empty'
               && $self->{'is_empty'})) {
@@ -136,10 +138,12 @@ sub get_value {
   my @children = $self->{'object'}->get_children;
   my $pname = $self->{'pname'};
   if ($pname eq 'count') {
-    return scalar @children;
+    return scalar(@children);
   }
-  return (@children != 0) ^ ($pname eq 'empty'));
+  # "empty" or "not-empty"
+  return (@children != 0) ^ ($pname eq 'empty');
 }
+
 sub set_value {
   die "oops, container-children is meant to be read-only";
 }

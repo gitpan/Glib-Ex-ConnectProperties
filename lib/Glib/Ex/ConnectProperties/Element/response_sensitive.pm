@@ -1,4 +1,4 @@
-# Copyright 2010 Kevin Ryde
+# Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -25,7 +25,7 @@ use Glib;
 use Gtk2;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 14;
+our $VERSION = 15;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -78,7 +78,6 @@ sub find_property {
   ### response-sensitive find_property(): $self->{'pname'}
   ### can(get_response_for_widget): $self->{'object'}->can('get_response_for_widget')
   my $pname = $self->{'pname'};
-  my $object;
   return ((_enum_get_value_by_perl('Gtk2::ResponseType',$pname)
            || $pname =~ /^-?\d+$/)
           && ($self->{'object'}->can('get_response_for_widget')
