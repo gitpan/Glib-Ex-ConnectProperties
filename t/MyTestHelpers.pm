@@ -110,10 +110,12 @@ sub findrefs {
 sub test_weaken_show_leaks {
   my ($leaks) = @_;
   $leaks || return;
-  MyTestHelpers::diag ("Test-Weaken:");
-  MyTestHelpers::dump ($leaks);
 
   my $unfreed = $leaks->unfreed_proberefs;
+  my $unfreed_count = scalar(@$unfreed);
+  MyTestHelpers::diag ("Test-Weaken leaks $unfreed_count objects");
+  MyTestHelpers::dump ($leaks);
+
   my $proberef;
   foreach $proberef (@$unfreed) {
     MyTestHelpers::diag ("  unfreed ", $proberef);
@@ -156,7 +158,9 @@ sub main_iterations {
 #
 sub warn_suppress_gtk_icon {
   my ($message) = @_;
-  unless ($message =~ /Gtk-WARNING.*icon/) {
+  unless ($message =~ /Gtk-WARNING.*icon/
+         || $message =~ /\Qrecently-used.xbel/
+         ) {
     warn @_;
   }
 }

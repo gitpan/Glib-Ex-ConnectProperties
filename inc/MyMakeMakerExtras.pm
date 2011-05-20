@@ -30,7 +30,7 @@ sub WriteMakefile {
 
   if (exists $opts{'META_MERGE'}) {
     # cf. ExtUtils::MM_Any::metafile_data() default ['t','inc']
-    foreach ('devel', 'examples', 'junk', 'maybe') {
+    foreach ('xt', 'devel', 'examples', 'junk', 'maybe') {
       my $dir = $_;
       if (-d $dir) {
         push @{$opts{'META_MERGE'}->{'no_index'}->{'directory'}}, $dir;
@@ -43,7 +43,14 @@ sub WriteMakefile {
     _meta_merge_shared_devel (\%opts);
   }
 
+  if (! defined $opts{'clean'}->{'FILES'}) {
+    $opts{'clean'}->{'FILES'} = '';
+  }
   $opts{'clean'}->{'FILES'} .= ' temp-lintian $(MY_HTML_FILES)';
+
+  if (! defined $opts{'realclean'}->{'FILES'}) {
+    $opts{'realclean'}->{'FILES'} = '';
+  }
   $opts{'realclean'}->{'FILES'} .= ' TAGS';
 
   if (! defined &MY::postamble) {

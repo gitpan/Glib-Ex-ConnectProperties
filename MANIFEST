@@ -11,7 +11,6 @@ devel/child-run.pl
 devel/child.pl
 devel/combobox.pl
 devel/combobox_active.pl
-devel/combobox_active.pm
 devel/container.pm
 devel/goo_child.pl
 devel/goo_child.pm
@@ -36,6 +35,7 @@ inc/MyMakeMakerExtras.pm
 lib/Glib/Ex/ConnectProperties.pm
 lib/Glib/Ex/ConnectProperties/Element.pm
 lib/Glib/Ex/ConnectProperties/Element/child.pm
+lib/Glib/Ex/ConnectProperties/Element/combobox_active.pm
 lib/Glib/Ex/ConnectProperties/Element/iconview_selection.pm
 lib/Glib/Ex/ConnectProperties/Element/model_rows.pm
 lib/Glib/Ex/ConnectProperties/Element/object.pm
@@ -49,6 +49,7 @@ MANIFEST.SKIP
 README
 SIGNATURE
 t/child.t
+t/combobox-active.t
 t/ConnectProperties-load.t
 t/ConnectProperties.t
 t/Gtk2-display.t

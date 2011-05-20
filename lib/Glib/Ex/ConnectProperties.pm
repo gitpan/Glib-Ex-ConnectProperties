@@ -25,7 +25,7 @@ use Scalar::Util;
 use Module::Load;
 use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 15;
+our $VERSION = 16;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -745,6 +745,23 @@ The C<Gtk2> things don't create a dependency on C<Gtk2> unless you use them.
 The implementation is modular so the extras are not loaded unless used.  The
 C<#> separator character doesn't clash with plain properties as it's not
 allowed in a ParamSpec name.
+
+=head2 ComboBox Active Row
+
+The active row of a C<Gtk2::ComboBox> can be accessed and controlled from
+ConnectProperties with the following.  The C<Gtk2::Ex::ComboBoxBits> helper
+module is required.
+
+    combobox-active#exists     boolean, read-only
+    combobox-active#path       Gtk2::TreePath
+    combobox-active#iter       Gtk2::TreeIter
+    combobox-active#text       string
+
+C<path> and C<iter> are good for active sub-rows.  The plain ComboBox
+C<active> is enough for just toplevel row.
+
+C<text> is for use on a "simplified text" ComboBox as created by
+C<< Gtk2::ComboBox->new_text() >>.
 
 =head2 Container Child Properties
 
