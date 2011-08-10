@@ -23,7 +23,7 @@ use warnings;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 16;
+our $VERSION = 17;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

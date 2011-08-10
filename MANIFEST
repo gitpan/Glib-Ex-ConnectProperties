@@ -21,6 +21,8 @@ devel/model.pl
 devel/proptypes.pl
 devel/read-on-signal.pl
 devel/run.pl
+devel/screen-setting.pl
+devel/screen-size.pl
 devel/transform.pl
 devel/type-prefix.pl
 devel/unichar.pl
@@ -40,6 +42,7 @@ lib/Glib/Ex/ConnectProperties/Element/iconview_selection.pm
 lib/Glib/Ex/ConnectProperties/Element/model_rows.pm
 lib/Glib/Ex/ConnectProperties/Element/object.pm
 lib/Glib/Ex/ConnectProperties/Element/response_sensitive.pm
+lib/Glib/Ex/ConnectProperties/Element/screen_size.pm
 lib/Glib/Ex/ConnectProperties/Element/tree_selection.pm
 lib/Glib/Ex/ConnectProperties/Element/widget.pm
 lib/Glib/Ex/ConnectProperties/Element/widget_allocation.pm
@@ -62,11 +65,14 @@ t/POSIX.t
 t/response-sensitive-infobar.t
 t/response-sensitive-read.t
 t/response-sensitive.t
+t/screen_size.t
 t/test-weaken.t
 t/tree_selection.t
 t/widget-load.t
 t/widget.t
 t/widget_allocation.t
+xt/0-examples-xrefs.t
+xt/0-file-is-part-of.t
 xt/0-META-read.t
 xt/0-no-debug-left-on.t
 xt/0-Test-ConsistentVersion.t

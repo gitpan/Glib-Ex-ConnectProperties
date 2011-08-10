@@ -1,13 +1,3 @@
-# model-rows#empty
-# model-nullity#empty
-# model-content#empty
-# model-contents#empty
-# model-emptiness#empty
-# model-emptiness#not-empty
-
-
-
-
 # Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
@@ -34,7 +24,7 @@ use Glib;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 16;
+our $VERSION = 17;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;

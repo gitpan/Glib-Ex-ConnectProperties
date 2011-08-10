@@ -17,8 +17,8 @@
 
 
 
-# no signal for child added, emission of parent-set only
-# parent-set to undef must check all
+# no signal for child added, emission of parent-set on child widget only
+# when parent-set to undef must check all for which container decreased
 
 # container#empty
 # container#not-empty
@@ -28,11 +28,6 @@
 # container-children#empty
 # container-children#not-empty
 # container-children#count
-# container-children#top-count
-
-
-
-
 
 
 
@@ -45,7 +40,7 @@ use Glib;
 use Scalar::Util;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 16;
+our $VERSION = 17;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
