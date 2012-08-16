@@ -1,4 +1,4 @@
-# Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -15,6 +15,13 @@
 # You should have received a copy of the GNU General Public License along
 # with Glib-Ex-ConnectProperties.  If not, see <http://www.gnu.org/licenses/>.
 
+
+# maybe:
+# multiplier factor [$obj,'prop',mul=>2]
+
+
+
+
 package Glib::Ex::ConnectProperties;
 use 5.008;
 use strict;
@@ -25,7 +32,7 @@ use Scalar::Util;
 use Module::Load;
 use Glib::Ex::SignalIds 5; # version 5 for add()
 
-our $VERSION = 17;
+our $VERSION = 18;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -473,7 +480,7 @@ in the Glib-Ex-ConnectProperties sources for a complete program.
 
 The following property types are supported
 
-    string         of wide chars
+    string
     number         integer or float
     enum           Glib::Enum subtypes
     flags          Glib::Flags subtypes
@@ -484,36 +491,34 @@ The following property types are supported
 Boxed types which work include C<Gtk2::Gdk::Color> and
 C<Gtk2::Gdk::Rectangle>, but others may not.  See L</Equality> below.
 
-Read-only properties on objects can be given.  They're propagated out to the
+Read-only properties on objects can be used.  They're propagated out to the
 other linked properties but changes in those others are not stored back.
-This can leave different values, which defeats the purpose of the linkage,
-so a read-only probably only makes sense if that read-only is the only one
-changing.  An explicit signal handler could propagate that easily enough but
-a ConnectProperties is convenient and is careful not to make circular
-references.  See the C<read_only> option below to force read-only.
+Usually this is only useful when the read-only is the only one changing.
+You could easily enough make an explicit signal handler to propagate the
+value, but a ConnectProperties is convenient and is careful not to make
+circular references.  See the C<read_only> option below to force read-only.
 
-Write-only properties can be given.  Nothing is read out of them, they're
-just set from changes in the other linked properties.  Often write-only
-properties are pseudo "add" methods etc, so it's a little unlikely linking a
-write-only will be wanted.  See the C<write_only> option below to force
-write-only.
+Write-only properties can be used.  Nothing is read out of them, they're
+just set from changes in the other linked properties.  Sometimes write-only
+properties are pseudo "add" methods etc, so a write-only would be unusal.
+See the C<write_only> option below to force write-only.
 
-It works to link two properties on the same object.  This can ensure they
-update together.  It also works to have two different ConnectProperties with
+It works to link properties on the same object.  This can ensure they update
+together.  It also works to have different ConnectProperties linkages with
 an object/property in common.  A change coming from one group propagates
 through to the other.  This arises quite naturally if there's two controls
-for the same target -- neither control needs to know the other exists.
+for the same target.
 
-A property name can include an explicit class like C<GtkLabel::justify> as
-usual for C<set_property()>, C<find_property()>, etc.
+A property name can include an explicit class like C<GtkLabel::justify> in
+the usual style of C<set_property()>, C<find_property()>, etc.
 
     [ $widget, 'GtkLabel::justify' ]
 
 If a subclass accidentally shadows a superclass property name then this
-gives access to the superclass, but is otherwise unnecessary and not
-recommended.  A Perl subclass like C<My::Foo::Bar> is
-C<My__Foo__Bar::propname>, as usual for Perl module to Glib class name
-conversion.
+gives access to the superclass property.  But it's otherwise unnecessary and
+not recommended.  For a Perl subclass like C<My::Foo::Bar> the
+fully-qualified name is C<My__Foo__Bar::propname>, as usual for Perl module
+to Glib class name conversion.
 
 =head1 FUNCTIONS
 
@@ -539,24 +544,24 @@ only as long as you keep that returned object.
 =back
 
 The arguments to both constructors are arrayrefs with an object, a property
-name, and perhaps further options described below.  For example
+name, and perhaps further options as described below.  For example
 
     Glib::Ex::ConnectProperties->new
-      ([$aa_object, 'some-propname'],
-       [$bb_object, 'another-propname']);
+      ([$object1, 'some-propname'],
+       [$object2, 'another-propname']);
 
 An initial value is propagated from the first object+property (the first
-readable one) to set all the others if they're not already the same.  Put
+readable one) to set all the others if they're not already the same.  So put
 the object with the desired initial value first.
 
 A ConnectProperties only keeps weak references to the objects, so the
 linkage doesn't prevent some or all of them being garbage collected.
 
 A C<dynamic()> linkage can be used if it's only wanted for a certain time,
-or if the target objects to link might change and you will want to drop the
-old and make a new.  For example something like the following inside a
-widget or object would allow a target to be changed, including changed to
-C<undef> for nothing to link.
+or if desired linkages might change and you want to drop an old one and make
+a new.  For example something like the following inside a widget or object
+would allow a target to be changed, including changed to C<undef> for
+nothing linked.
 
     sub set_target {
       my ($self, $target_object) = @_;
@@ -614,17 +619,18 @@ transformation to read back anyway.
          [$label, 'text', write_only => 1]);
 
 Of course an explicit signal handler can do a one-way set like this, but
-ConnectProperties is a couple less lines.
+ConnectProperties is a couple less lines of code.
 
 =item C<< read_signal => $signame >>
 
-Connect to C<$signame> to see changes to the property.  The default is
-C<notify::$propname> which means a property change is immediately seen and
-propagated.  A different signal can be used to do it at other times instead.
+Connect to C<$signame> to see changes to the property.  The default is the
+notify signal as C<notify::$propname> which means a property change is
+immediately seen and propagated.  A different signal can be used to do it at
+other times instead.
 
-For example on a C<Gtk2::Entry> the C<text> property updates and notifies
-for every character typed by the user.  With the C<activate> signal you can
-instead take the value only when the user presses Return.
+For example on a C<Gtk2::Entry> the C<text> property notifies for every
+character typed by the user.  Using the C<activate> signal instead you can
+take the value only when the user presses Return.
 
     Glib::Ex::ConnectProperties->new
         ([$entry, 'text', read_signal => 'activate'],
@@ -639,11 +645,11 @@ sort of user action.
 The return value for the C<read_signal> handler above.  The default return
 is C<undef>.
 
-Most signals which make sense have no return value (ie. C<void>), so no
-particular return is needed.  But as an example if a widget event handler
-was a good time to look at a property then a return of
-C<Gtk2::EVENT_PROPAGATE> would generally be wanted to let other handlers see
-the event too.
+Generally the signals which are useful for triggering a read have no return
+value (ie. C<void>), so no particular return is needed.  But for example if
+a widget event handler was a good time to look at a property then a return
+of C<Gtk2::EVENT_PROPAGATE> would generally be wanted to let other handlers
+see the event too.
 
     Glib::Ex::ConnectProperties->new
         ([$widget, 'window',
@@ -680,17 +686,16 @@ C<set_property()>
 =back
 
 C<value_validate()> does things like clamp numbers outside the ParamSpec
-min/max, perhaps manipulate string contents, etc.  The result may then not
-be exactly what was desired, but at least gives something which can be
-stored.
+min/max, perhaps manipulate string contents, etc.  This at least gives
+something which can be stored.
 
-Perl's usual value coercing such as stringizing, numizing, low bits of
-integers, etc, applies to the C<value_validate()> call, and the
+Perl's usual value coercing such as stringizing, numizing, truncating
+integers, etc, applies to the C<value_validate()> call and the
 C<set_property()> call, in the usual way.  This means string properties can
 be linked to number properties or similar with no special tranformations.
 
 In the following options the "in" transformations are for storing and the
-"out" for reading.  C<func> is the most general, or C<hash> is handy for a
+"out" for reading.  C<func> is the most general.  C<hash> is handy for a
 fixed set of possible values.
 
 =over
@@ -861,7 +866,7 @@ change can occur from a RANDR or Xinerama rearrangement of output monitors.
 In all cases the sizes are read-only, since C<Gtk2::Gdk::Screen> doesn't
 have anything to perform video mode or monitor changes.
 
-For example to connect the width to display in a label,
+For example to display the width in a label,
 
     my $toplevel = Gtk2::Window->new('toplevel');
     my $screen = $toplevel->get_screen;
@@ -872,9 +877,32 @@ For example to connect the width to display in a label,
        [$label,  'label']);
 
 For reference, under X the C<fullscreen()> mode in C<Gtk2::Gdk::Window>
-probably depends on the window manager noticing screen size changes.  It
-hopefully oughtn't be necessary to say connect C<screen-size#> to the window
-size to keep full screen on screen size changes.
+probably depends on the window manager noticing screen size changes.
+Hopefully it's not necessary for an application to link C<screen-size#> to
+the window size to keep full screen on screen size changes.
+
+=head2 TextBuffer Contents
+
+The size of the text in a C<Gtk2::TextBuffer> object can be accessed with
+
+    textbuffer#empty           boolean, read-only
+    textbuffer#not-empty       boolean, read-only
+    textbuffer#char-count      integer, read-only
+
+For example "not-empty" might be connected up to make a clear button
+sensitive only when there is in fact something to clear
+
+    my $treeselection = $treeview->get_selection;
+    Glib::Ex::ConnectProperties->new
+      ([$textbuf, 'textbuffer#not-empty'],
+       [$button,  'sensitive', write_only => 1]);
+
+These attributes use C<$textbuf-E<gt>get_char_count()>.  C<Gtk2::TextBuffer>
+doesn't offer this count from a property as such, only a method.
+
+The full content is available as C<text> property, but Gtk circa 2.24.8
+doesn't seem to emit a C<notify> for it, so if linking that use
+C<read_signal =E<gt> "changed">.
 
 =head2 Tree Model Rows
 
@@ -890,7 +918,7 @@ sensitive only when a model has rows to act on.
       ([$model,  'model-rows#not-empty'],
        [$button, 'sensitive']);
 
-Emptiness is simply per C<get_iter_first()>.  C<row-deleted> or
+Emptiness is simply per C<get_iter_first()>.  The C<row-deleted> or
 C<row-inserted> signals are used to listen for becoming empty or not empty.
 
 =head2 TreeView and IconView Selected Rows
@@ -1116,7 +1144,7 @@ it could be handled by a ParamSpec subclass with a C<values_cmp()> to
 express when different objects are equal enough.  If/when possible that
 would work for both C code and Perl code comparisons.
 
-=head2 Object Authors
+=head2 Object Implementation
 
 If you're writing an object or widget (per L<Glib::Object::Subclass>) don't
 forget to explicitly C<notify> when changing a property outside a
@@ -1130,19 +1158,20 @@ C<SET_PROPERTY()>.  For example,
       }
     }
 
-This sort of C<notify> should be done in any object or widget
-implementation.  Failing to do so will in particular mean ConnectProperties
-doesn't work, and probably other things.  A C<SET_PROPERTY()> can call out
-to a setter function like the above to re-use code.  In that case Glib
-collapses the C<notify> to just one notify signal at the end of
-C<SET_PROPERTY()>.
+This sort of C<notify> is necessary in any object or widget implementation.
+Failing to do so will in particular mean ConnectProperties doesn't work, and
+probably other things.  A C<SET_PROPERTY()> can call out to a setter
+function like the above to re-use code.  In that case Glib collapses the
+C<notify> to just one notify signal at the end of C<SET_PROPERTY()>.
 
 =head1 SEE ALSO
 
 L<Glib::Object>,
 L<Glib::ParamSpec>
 
-L<Glib::Boxed>
+L<Glib::Boxed>, L<Gtk2>
+
+L<Tie::Wx::Widget>
 
 =head1 HOME PAGE
 
@@ -1150,7 +1179,7 @@ L<http://user42.tuxfamily.org/glib-ex-connectproperties/index.html>
 
 =head1 LICENSE
 
-Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
+Copyright 2007, 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published by

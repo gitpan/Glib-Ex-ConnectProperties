@@ -1,4 +1,4 @@
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -29,7 +29,7 @@ use Glib;
 use Gtk2;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 17;
+our $VERSION = 18;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -43,6 +43,7 @@ my %pspecs = do {
                                        'readable');
   ('empty'      => $bool,
    'not-empty'  => $bool,
+
    'count'      => Glib::ParamSpec->int ('count', # name
                                          '',      # nick
                                          '',      # blurb

@@ -1,6 +1,6 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
-# Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -44,9 +44,11 @@ MyMakeMakerExtras::WriteMakefile
 
    META_MERGE =>
    { resources =>
-     { homepage =>
-       'http://user42.tuxfamily.org/glib-ex-connectproperties/index.html',
+     { homepage => 'http://user42.tuxfamily.org/glib-ex-connectproperties/index.html',
+       license  => 'http://www.gnu.org/licenses/gpl.html',
      },
+     no_index => { directory=>['devel'] },
+
      recommends =>
      { 'DateTime'           => 0,
        'DateTime::TimeZone' => 0,
@@ -64,16 +66,17 @@ MyMakeMakerExtras::WriteMakefile
          requires => { 'Gtk2' => 0,
                      },
        },
-       maximum_devel =>
-       { description => 'Stuff used variously for development.',
-         requires => { 'Gtk2'        => 0,
-                       'Gtk2::Pango' => 0,
-                       'Glib::Object::Subclass' => 0,
-                       'Tie::Hash::TwoWay' => 0,
-                       'Goo::Canvas' => 0,
-                       'Smart::Comments' => 0,
-                     },
-       },
      },
    },
   );
+
+       # maximum_devel =>
+       # { description => 'Stuff used variously for development.',
+       #   requires => { 'Gtk2'        => 0,
+       #                 'Gtk2::Pango' => 0,
+       #                 'Glib::Object::Subclass' => 0,
+       #                 'Tie::Hash::TwoWay' => 0,
+       #                 'Goo::Canvas' => 0,
+       #                 'Smart::Comments' => 0,
+       #               },
+       # },

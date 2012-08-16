@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Glib-Ex-ConnectProperties
-version:            17
+version:            18
 abstract:           Link properties between objects.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -23,26 +23,16 @@ no_index:
     directory:
         - t
         - inc
+        - devel
         - xt
         - devel
         - examples
         - maybe
-generated_by:       ExtUtils::MakeMaker version 6.56
+generated_by:       ExtUtils::MakeMaker version 6.57_05
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html
     version:  1.4
 optional_features:
-    maximum_devel:
-        description:  Stuff used variously for development.
-        requires:
-            Glib::Object::Subclass:  0
-            Goo::Canvas:          0
-            Gtk2:                 0
-            Gtk2::Pango:          0
-            Pod::Simple::HTML:    0
-            Smart::Comments:      0
-            Tie::Hash::TwoWay:    0
-            warnings::unused:     0
     maximum_examples:
         description:  Be able to run all the example programs.
         requires:
@@ -50,18 +40,9 @@ optional_features:
     maximum_tests:
         description:  Have "make test" do as much as possible.
         requires:
-            Gtk2:                0
-            Module::Util:        0
-            Parse::CPAN::Meta:   0
-            Test::DistManifest:  0
-            Test::Pod:           1.00
-            Test::Synopsis:      0
-            Test::Weaken:        2.002
-            Test::YAML::Meta:    0.15
-            YAML:                0
-            YAML::Syck:          0
-            YAML::Tiny:          0
-            YAML::XS:            0
+            Gtk2:          0
+            Module::Util:  0
+            Test::Weaken:  2.002
 recommends:
     DateTime:            0
     DateTime::TimeZone:  0

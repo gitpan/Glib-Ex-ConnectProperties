@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2008, 2009, 2010, 2011 Kevin Ryde
+# Copyright 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -26,10 +26,10 @@ use lib 't';
 use MyTestHelpers;
 BEGIN { MyTestHelpers::nowarnings() }
 
-# 2.002 for "ignore"
-eval "use Test::Weaken 2.002; 1"
-  or plan skip_all => "due to Test::Weaken 2.002 not available -- $@";
-diag ("Test::Weaken version ", Test::Weaken->VERSION);
+# 3.018 for "ignore_objects"
+eval "use Test::Weaken 3.018; 1"
+  or plan skip_all => "due to Test::Weaken 3.018 not available -- $@";
+diag ("using Test::Weaken version ", Test::Weaken->VERSION);
 
 eval { require Gtk2 }
   or plan skip_all => "due to Gtk2 module not available -- $@";
@@ -122,10 +122,7 @@ require Glib;
            ([$model, 'model-rows#empty'],
             [$foo,   'mybool']);
        },
-       ignore => sub {
-         my ($ref) = @_;
-         return ($ref == $foo || $ref == $model);
-       },
+       ignore_objects => [ $foo, $model ],
      });
   is ($leaks, undef, 'dynamic() deep gc -- with objects persisting');
   if ($leaks) {
