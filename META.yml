@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Glib-Ex-ConnectProperties
-version:            18
+version:            19
 abstract:           Link properties between objects.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -27,7 +27,6 @@ no_index:
         - xt
         - devel
         - examples
-        - maybe
 generated_by:       ExtUtils::MakeMaker version 6.57_05
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2007, 2008, 2009, 2010, 2011 Kevin Ryde
+# Copyright 2007, 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -26,15 +26,26 @@ use Gtk2 '-init';
 use Gtk2;
 use Gtk2::Ex::ComboBox::Enum;
 
+use FindBin;
+my $progname = $FindBin::Script;
+
+# uncomment this to run the ### lines
+use Smart::Comments;
+
+
 my $read_signal = 'direction-changed';
-my $get_method = 'get_direction';
-my $set_method = 'set_direction';
-# my $get_method = sub { my ($widget, $pname) = @_;
-#                        return $widget->get_direction;
-#                      };
-# my $set_method = sub { my ($widget, $pname, $dir) = @_;
-#                        return $widget->set_direction($dir);
-#                      };
+# my $get_method = 'get_direction';
+# my $set_method = 'set_direction';
+my $get_method = sub {
+  my ($widget, $pname) = @_;
+  ### get direction ...
+  return $widget->get_direction;
+};
+my $set_method = sub {
+  my ($widget, $pname, $dir) = @_;
+  ### set direction ...
+  return $widget->set_direction($dir);
+};
 my $pspec = Glib::ParamSpec->enum ('direction',
                                    'direction',
                                    '',          # blurb
@@ -43,9 +54,6 @@ my $pspec = Glib::ParamSpec->enum ('direction',
                                    Glib::G_PARAM_READWRITE);
 
 
-
-use FindBin;
-my $progname = $FindBin::Script;
 
 my $toplevel = Gtk2::Window->new('toplevel');
 # $toplevel->set_policy (1, 1, 1);

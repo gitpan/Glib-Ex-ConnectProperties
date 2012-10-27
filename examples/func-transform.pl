@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2008, 2009, 2010, 2011 Kevin Ryde
+# Copyright 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -27,8 +27,8 @@ use Glib::Ex::ConnectProperties;
 # This example uses a "func_in" / "func_out" pair to make one spin button
 # track the other, with an extra +100 in the second.
 #
-# Spin buttons operate on values etc in Gtk2::Adjustment objects and it's
-# the values on those adjustment objects which are actually linked.
+# A spin button operates on a value held in a Gtk2::Adjustment object and so
+# it's the values on those adjustment objects which are linked.
 #
 #
 # When there's just two properties like this you could also set it up with
@@ -41,7 +41,7 @@ use Glib::Ex::ConnectProperties;
 # the other party.
 #
 # But for three or more in a ConnectProperties group this is no good, you
-# normally have to decide the set or range of values that's going to be the
+# normally have to decide the range or set of values that's going to be the
 # common denominator and transform in/out on whichever of the targets then
 # needs them massaged.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2008, 2009, 2010, 2011 Kevin Ryde
+# Copyright 2008, 2009, 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -30,7 +30,7 @@ require Glib::Ex::ConnectProperties;
 
 #-----------------------------------------------------------------------------
 # VERSION
-my $want_version = 18;
+my $want_version = 19;
 {
   is ($Glib::Ex::ConnectProperties::VERSION, $want_version,
       'VERSION variable');

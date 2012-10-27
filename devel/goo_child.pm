@@ -1,4 +1,4 @@
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -22,7 +22,7 @@ use warnings;
 use Carp;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 18;
+our $VERSION = 19;
 
 # uncomment this to run the ### lines
 use Smart::Comments;

@@ -1,4 +1,4 @@
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -40,7 +40,7 @@ use Glib;
 use Scalar::Util;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 18;
+our $VERSION = 19;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -50,28 +50,26 @@ our $VERSION = 18;
 #    [$button, 'sensitive']);
 
 
-my %pspecs = do {
-  # dummy name as paramspec name cannot be empty string
-  my $pspec = Glib::ParamSpec->boolean ('e', # name
-                                        'e', # name
-                                        '',  # blurb
-                                        0,   # default
-                                        'readable');
-  ('empty'     => $pspec,
-   'not-empty' => $pspec,
-   'count'     =>  Glib::ParamSpec->int ('count',  # name
-                                         'count',  # nick
-                                         '',   # blurb
-                                         0,    # min
-                                         999,  # max, unused
-                                         0,    # default
-                                         'readable'),
-  )
-};
-sub find_property {
-  my ($self) = @_;
-  return $pspecs{$self->{'pname'}};
-}
+use constant property_hash =>
+  {
+   # dummy name as paramspec name cannot be empty string
+   my $pspec = Glib::ParamSpec->boolean ('empty', # name, unused
+                                         '',      # nick, unused
+                                         '',      # blurb
+                                         0,       # default, unused
+                                         'readable');
+   ({
+     'empty'     => $pspec,
+     'not-empty' => $pspec,
+     'count'     =>  Glib::ParamSpec->int ('count',  # name, unused
+                                           '',       # nick, unused
+                                           '',       # blurb, unused
+                                           0,        # min, unused
+                                           999,      # max, unused
+                                           0,        # default
+                                           'readable'),
+    })
+  };
 
 my $emission_hook_id;
 my $instance_count = 0;
@@ -137,10 +135,6 @@ sub get_value {
   }
   # "empty" or "not-empty"
   return (@children != 0) ^ ($pname eq 'empty');
-}
-
-sub set_value {
-  die "oops, container-children is meant to be read-only";
 }
 
 1;

@@ -18,6 +18,7 @@ devel/hash-undef.pl
 devel/infinite-notify.pl
 devel/misc.pl
 devel/model.pl
+devel/naive-handlers.pl
 devel/proptypes.pl
 devel/read-on-signal.pl
 devel/run.pl
@@ -33,6 +34,7 @@ devel/widget-toplevel.pl
 examples/func-transform.pl
 examples/hash-transform.pl
 examples/sensitive.pl
+examples/unidirectional.pl
 inc/my_pod2html
 inc/MyMakeMakerExtras.pm
 lib/Glib/Ex/ConnectProperties.pm

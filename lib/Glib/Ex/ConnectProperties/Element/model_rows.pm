@@ -1,4 +1,4 @@
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Glib-Ex-ConnectProperties.
 #
@@ -24,25 +24,25 @@ use Glib;
 use Glib;
 use base 'Glib::Ex::ConnectProperties::Element';
 
-our $VERSION = 18;
+our $VERSION = 19;
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
-my %pspecs = do {
-  # dummy name as paramspec name cannot be empty
-  my $pspec = Glib::ParamSpec->boolean ('model-rows',
-                                        'model-rows',
-                                        '',       # blurb
-                                        0,        # default, unused
-                                        'readable');
-  ('empty'     => $pspec,
-   'not-empty' => $pspec)
-};
-sub find_property {
-  my ($self) = @_;
-  return $pspecs{$self->{'pname'}};
-}
+
+use constant pspec_hash =>
+  do {
+    # dummy name as paramspec name cannot be empty
+    my $pspec = Glib::ParamSpec->boolean ('empty',  # name, unused
+                                          '',       # nick, unused
+                                          '',       # blurb, unused
+                                          0,        # default, unused
+                                          'readable');
+    ({
+      'empty'     => $pspec,
+      'not-empty' => $pspec,
+     })
+  };
 
 sub connect_signals {
   my ($self) = @_;
@@ -61,6 +61,12 @@ sub connect_signals {
        $model->signal_connect ('row-inserted', \&_do_inserted, $self));
   }
 }
+sub disconnect {
+  my ($self) = @_;
+  delete $self->{'ids'};
+  delete $self->{'ids2'};
+}
+
 # row-deleted signal handler
 sub _do_deleted {
   my $self = $_[-1];
@@ -92,18 +98,11 @@ sub get_value {
   return (defined($self->{'object'}->get_iter_first)
           ^ ($self->{'pname'} eq 'empty'));
 }
-sub set_value {
-  die "oops, model-rows is meant to be read-only";
-}
 
 1;
 __END__
 
-
-
-
 #     model-rows#top-count        integer, read-only
-
 
 # sub connect {
 #   my ($self) = @_;
@@ -164,20 +163,7 @@ __END__
 #    [$button, 'sensitive']);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# sub read_signals {
+# sub read_signal {
 #   return ($self->{'empty'} ? 'row-inserted' : 'row-deleted');
 # }
 # 
@@ -224,4 +210,65 @@ __END__
 #              ('row-inserted', $handler, $self));
 # }
 
+=for stopwords  Glib-Ex-ConnectProperties ConnectProperties TreeModel ie Ryde
 
+=head1 NAME
+
+Glib::Ex::ConnectProperties::Element::model_rows -- emptiness of a TreeModel
+
+=for test_synopsis my ($model,$another);
+
+=head1 SYNOPSIS
+
+ Glib::Ex::ConnectProperties->new([$model,   'model-rows#empty'],
+                                  [$another, 'something']);
+
+=head1 DESCRIPTION
+
+This element class implements ConnectProperties access to the following
+attributes of a L<Gtk2::TreeModel>, meaning any C<Glib::Object> which
+implements the C<Gtk2::TreeModel> interface.
+
+    model-rows#empty            boolean, read-only
+    model-rows#not-empty        boolean, read-only
+
+These are read-only but can be used for instance to make a control widget
+sensitive only when a model has some rows for the control to act on.
+
+    Glib::Ex::ConnectProperties->new
+      ([$model,  'model-rows#not-empty'],
+       [$button, 'sensitive']);
+
+Emptiness is detected simply by C<get_iter_first()>.  The C<row-deleted> and
+C<row-inserted> signals are used to listen for the model becoming empty or
+not empty by inserts or deletes.
+
+=head1 SEE ALSO
+
+L<Glib::Ex::ConnectProperties>,
+L<Glib::Ex::ConnectProperties::Element::tree_selection>,
+L<Glib::Ex::ConnectProperties::Element::textbuffer>,
+L<Gtk2::TreeModel>
+
+=head1 HOME PAGE
+
+L<http://user42.tuxfamily.org/glib-ex-connectproperties/index.html>
+
+=head1 LICENSE
+
+Copyright 2010, 2011, 2012 Kevin Ryde
+
+Glib-Ex-ConnectProperties is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3, or (at your option) any
+later version.
+
+Glib-Ex-ConnectProperties is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+Glib-Ex-ConnectProperties.  If not, see L<http://www.gnu.org/licenses/>.
+
+=cut
